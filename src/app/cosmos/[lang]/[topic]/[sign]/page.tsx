@@ -12,22 +12,20 @@ const ZODIAC_DICT: Record<string, Record<string, string>> = {
   en: { koc: 'Aries', boga: 'Taurus', ikizler: 'Gemini', yengec: 'Cancer', aslan: 'Leo', basak: 'Virgo', terazi: 'Libra', akrep: 'Scorpio', yay: 'Sagittarius', oglak: 'Capricorn', kova: 'Aquarius', balik: 'Pisces' }
 };
 
-// Next.js 16 Zorunluluğu: Params tipini Promise olarak tanımlıyoruz
 type PageParams = { lang: string; topic: string; sign: string };
 
 export default async function ZodiacArticle({ params }: { params: Promise<PageParams> }) {
   
-  // 1. HATAYI ÇÖZEN KRİTİK ADIM: Params nesnesini güvenli bir şekilde bekliyoruz
+  // 1. ADIM: Params nesnesini en başta çözüyoruz
   const resolvedParams = await params; 
-  
-  const { lang, topic, sign } = resolvedParams;
+  if (!resolvedParams) return null;
 
-  const cleanLang = decodeURIComponent(lang || 'en').trim();
-  const cleanTopic = decodeURIComponent(topic || '').trim();
-  const cleanSign = decodeURIComponent(sign || '').trim();
+  const cleanLang = decodeURIComponent(resolvedParams.lang || 'en').trim();
+  const cleanTopic = decodeURIComponent(resolvedParams.topic || '').trim();
+  const cleanSign = decodeURIComponent(resolvedParams.sign || '').trim();
 
-  // Veritabanı Sorgusu
-  const { data: insights } = await supabase
+  // 2. ADIM: Veritabanı sorgusu (Error handle ekledik)
+  const { data: insights, error } = await supabase
     .from('gemicha_insights')
     .select('*')
     .ilike('language', cleanLang)
@@ -38,13 +36,26 @@ export default async function ZodiacArticle({ params }: { params: Promise<PagePa
 
   const insight = insights?.[0];
 
-  // Veri yoksa şık bir uyarı ekranı (Blog stili)
-  if (!insight) {
+  // 3. ADIM: FAQ Parse İşlemi (Hata verebilecek en riskli yer burası)
+  let faqData = [];
+  try {
+    if (insight?.faq_schema) {
+      faqData = typeof insight.faq_schema === 'string' 
+        ? JSON.parse(insight.faq_schema) 
+        : insight.faq_schema;
+    }
+  } catch (e) {
+    console.error("FAQ Parsing Error", e);
+    faqData = [];
+  }
+
+  // Veri yoksa veya hata varsa şık bir 404/Error ekranı
+  if (!insight || error) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-10 font-['Plus_Jakarta_Sans',sans-serif]">
-        <h1 className="text-[#D4AF37] text-4xl font-black mb-4 uppercase italic">Data Sync Error</h1>
-        <p className="text-white/40 text-sm mb-8 italic">Neural record not found: {cleanLang}/{cleanTopic}/{cleanSign}</p>
-        <Link href="/cosmos" className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase hover:bg-white/10 transition">Back to Hub</Link>
+        <h1 className="text-[#D4AF37] text-4xl font-black mb-4 uppercase italic">Neural Link Broken</h1>
+        <p className="text-white/40 text-sm mb-8 italic">The stars could not align for this request. Please try again.</p>
+        <Link href="/cosmos" className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase hover:bg-white/10 transition">Re-Sync Cosmos</Link>
       </div>
     );
   }
@@ -52,7 +63,7 @@ export default async function ZodiacArticle({ params }: { params: Promise<PagePa
   return (
     <div className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black flex flex-col overflow-x-hidden">
       
-      {/* BLOG STİLİ NAV - */}
+      {/* BLOG STİLİ NAV */}
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-6 backdrop-blur-md shrink-0">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
           <Link href="/cosmos" className="flex items-center gap-3 group">
@@ -69,7 +80,7 @@ export default async function ZodiacArticle({ params }: { params: Promise<PagePa
 
       <div className="flex flex-1 flex-col md:flex-row">
         
-        {/* SIDEBAR - Blog Panel Mantığı */}
+        {/* SIDEBAR - BLOG PANEL */}
         <aside className="w-full md:w-[450px] bg-[#020202] border-r border-white/5 p-8 md:p-16 flex flex-col shrink-0">
            <div className="mb-8">
               <span className="bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full uppercase tracking-[0.3em] mb-8 inline-block">
@@ -82,7 +93,7 @@ export default async function ZodiacArticle({ params }: { params: Promise<PagePa
               <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest">{insight.target_date}</p>
            </div>
 
-           <div className="relative rounded-[2rem] overflow-hidden border border-white/5 mb-8 group shadow-2xl shadow-cyan-500/5">
+           <div className="relative rounded-[2rem] overflow-hidden border border-white/5 mb-8 group">
               <img 
                 src={`https://gemicha-portal.vercel.app/images/zodiac/${cleanSign}.webp`} 
                 className="w-full h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-105" 
@@ -90,39 +101,33 @@ export default async function ZodiacArticle({ params }: { params: Promise<PagePa
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-transparent to-transparent"></div>
            </div>
-
-           <div className="mt-auto p-6 bg-white/5 rounded-3xl border border-white/5">
-              <p className="text-[9px] font-black text-cyan-400 uppercase tracking-widest mb-2">Cosmic Integrity</p>
-              <p className="text-xs text-white/40 leading-relaxed italic">Neural architecture analysis complete. Data synchronized with planetary indices.</p>
-           </div>
         </aside>
 
-        {/* MAIN CONTENT AREA - Blog Makale Mantığı */}
+        {/* MAIN CONTENT - */}
         <main className="flex-1 bg-black p-8 md:p-20 overflow-y-auto">
           <div className="max-w-3xl mx-auto">
             
-            {/* Apple Tarzı Dramatik Giriş */}
+            {/* Apple Tarzı Giriş */}
             <div className="mb-20">
               <p className="text-2xl md:text-4xl font-light italic text-[#D4AF37] leading-relaxed opacity-90 border-l-4 border-[#D4AF37] pl-8">
                 "The stars do not compel, they impel. This is your personal cosmic weather report."
               </p>
             </div>
 
-            {/* İçerik Gövdesi */}
             <article className="prose prose-invert max-w-none">
               <div className="text-xl leading-[2.1] text-white/70 space-y-12 first-letter:text-8xl first-letter:font-black first-letter:text-[#D4AF37] first-letter:mr-5 first-letter:float-left first-letter:mt-3">
                 {insight.content_body}
               </div>
             </article>
 
-            {/* FAQ - Blog Soru-Cevap Stili */}
+            {/* FAQ */}
             <section className="mt-32 pt-20 border-t border-white/5">
               <h3 className="text-[10px] font-black tracking-[0.6em] uppercase text-cyan-500 mb-12">Neural Q&A Matrix</h3>
               <div className="grid gap-6">
-                {JSON.parse(insight.faq_schema || "[]").map((faq: any, idx: number) => (
+                {faqData && Array.isArray(faqData) && faqData.map((faq: any, idx: number) => (
                   <div key={idx} className="bg-white/5 p-10 rounded-[3rem] border border-white/5 hover:border-cyan-500/30 transition-all group">
-                    <p className="text-cyan-400 font-black text-xs mb-4 uppercase tracking-widest">Q: {faq.question}</p>
-                    <p className="text-white/40 text-sm leading-relaxed italic group-hover:text-white/60 transition-colors">A: {faq.answer}</p>
+                    <p className="text-cyan-400 font-black text-xs mb-4 uppercase tracking-widest">Q: {faq?.question}</p>
+                    <p className="text-white/40 text-sm leading-relaxed italic">A: {faq?.answer}</p>
                   </div>
                 ))}
               </div>
