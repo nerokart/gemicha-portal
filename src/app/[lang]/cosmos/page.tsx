@@ -32,7 +32,7 @@ export default function CosmosPortal({ params }: { params: { lang: string } }) {
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/80 backdrop-blur-md px-4 md:px-6">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
           <a href="/" className="flex items-center gap-3">
-            {/* Logo Dosyası: public/logo.png olarak yüklendiğinden emin ol */}
+            {/* Logo Dosyası: /logo.png olarak yüklendiğinden emin ol */}
             <img src="/logo.png" alt="Gemicha" className="h-10 w-auto rounded-lg" />
             <span className="text-xl font-extrabold tracking-widest uppercase">GEMICHA</span>
           </a>
