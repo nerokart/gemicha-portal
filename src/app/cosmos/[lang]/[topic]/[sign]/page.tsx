@@ -4,14 +4,17 @@ import { notFound } from 'next/navigation';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY!);
 
 export default async function ZodiacArticle({ params }: { params: { lang: string, topic: string, sign: string } }) {
-  // Supabase'den içeriği çek
-  const { data: insight } = await supabase
+
+  const { data: insights } = await supabase
     .from('gemicha_insights')
     .select('*')
-    .eq('language', params.lang)
-    .eq('topic', params.topic)
-    .eq('zodiac_sign', params.sign)
-    .single();
+    .ilike('language', params.lang)
+    .ilike('topic', params.topic)
+    .ilike('zodiac_sign', params.sign)
+    .order('created_at', { ascending: false }) // En son eklenen yazıyı en üste al
+    .limit(1); // Sadece 1 tanesini getir ki sayfa çökmesin
+
+  const insight = insights?.[0];
 
   if (!insight) notFound();
 
