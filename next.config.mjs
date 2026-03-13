@@ -1,13 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // TypeScript hatalarını (any vb.) Vercel build sırasında görmezden gelsin
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  // ESLint uyarılarını (kullanılmayan değişken vb.) görmezden gelsin
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
+  // SİHİRLİ DOKUNUŞ: Tarayıcıya CSS ve JS dosyalarını nereden alacağını kesin olarak söyler
+  assetPrefix: 'https://gemicha-portal.vercel.app',
 };
 
 export default nextConfig;
