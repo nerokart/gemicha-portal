@@ -22,7 +22,8 @@ export default async function ZodiacArticle({ params }: { params: { lang: string
     <article className="bg-[#050505] min-h-screen text-white">
       {/* 1. HERO AREA - Dramatik Blog Girişi */}
       <div className="relative h-[75vh] w-full flex items-end pb-20 overflow-hidden">
-        <img src={`/images/zodiac/${params.sign}_hero.jpg`} className="absolute inset-0 w-full h-full object-cover opacity-40 scale-110 animate-slow-zoom" />
+        {/* DİKKAT: Vercel Rewrite krizini aşmak için Absolute (Tam) Link kullanıldı */}
+        <img src={`https://gemicha-portal.vercel.app/images/zodiac/${params.sign}_hero.jpg`} className="absolute inset-0 w-full h-full object-cover opacity-40 scale-110 animate-slow-zoom" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-[#050505]" />
         
         <div className="relative max-w-4xl mx-auto px-6 text-center">
@@ -31,7 +32,7 @@ export default async function ZodiacArticle({ params }: { params: { lang: string
             <span className="border border-white/20 text-white/50 text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">{insight.target_date}</span>
           </div>
           <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-none mb-4">
-            {insight.meta_title.split(':')[0]}
+            {insight?.meta_title?.split(':')[0] || insight.meta_title}
           </h1>
         </div>
       </div>
