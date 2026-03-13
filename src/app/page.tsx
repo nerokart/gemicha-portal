@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import Link from 'next/link'; // Yönlendirme için eklendi
 
 // Supabase Global Bağlantı (Client-side)
 const supabase = createClient(
@@ -14,12 +15,27 @@ const LANG_NAMES = {
     ja: "日本語", ko: "한국어", nl: "Nederlands", pl: "Polski", sv: "Svenska", 
     da: "Dansk", fi: "Suomi", no: "Norsk", cs: "Čeština", hu: "Magyar", 
     ro: "Română", el: "Ελληνικά", he: "עברית", hi: "हिन्दी", bn: "বাংলা", 
-    id: "Bahasa Indonesia", ms: "Bahasa Melayu", th: "ไทย", vi: "Tiếng Việt"
+    id: "Bahasa Indonesia", ms: "Bahasa Melayu", th: "ไทย", vi: "Tiếng Việt", 
+    uk: "Українська", fa: "فارسی", ur: "اردو", ta: "தமிழ்", te: "తెలుగు", 
+    bg: "Български", tl: "Tagalog", hr: "Hrvatski", sr: "Српски", sk: "Slovenčina", 
+    sl: "Slovenščina", et: "Eesti", lv: "Latviešu", lt: "Lietuvių", ca: "Català", 
+    az: "Azərbaycanca", kk: "Қазақша" 
 };
+
+// Filtreleme için Burç Listesi
+const ZODIAC_SIGNS = [
+  { id: 'aries', name: 'Aries', tr: 'Koç' }, { id: 'taurus', name: 'Taurus', tr: 'Boğa' },
+  { id: 'gemini', name: 'Gemini', tr: 'İkizler' }, { id: 'cancer', name: 'Cancer', tr: 'Yengeç' },
+  { id: 'leo', name: 'Leo', tr: 'Aslan' }, { id: 'virgo', name: 'Virgo', tr: 'Başak' },
+  { id: 'libra', name: 'Libra', tr: 'Terazi' }, { id: 'scorpio', name: 'Scorpio', tr: 'Akrep' },
+  { id: 'sagittarius', name: 'Sagittarius', tr: 'Yay' }, { id: 'capricorn', name: 'Capricorn', tr: 'Oğlak' },
+  { id: 'aquarius', name: 'Aquarius', tr: 'Kova' }, { id: 'pisces', name: 'Pisces', tr: 'Balık' }
+];
 
 export default function GlobalCosmosPortal() {
   const [insights, setInsights] = useState<any[]>([]);
   const [lang, setLang] = useState('en');
+  const [activeSign, setActiveSign] = useState('all'); // Filtreleme durumu
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,6 +65,11 @@ export default function GlobalCosmosPortal() {
     document.documentElement.lang = newLang;
     fetchGlobalInsights(newLang);
   };
+
+  // Filtreleme Mantığı
+  const filteredInsights = activeSign === 'all' 
+    ? insights 
+    : insights.filter(i => i.zodiac_sign.toLowerCase() === activeSign.toLowerCase());
 
   return (
     <div className="bg-[#000] text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-white selection:text-black">
@@ -90,6 +111,25 @@ export default function GlobalCosmosPortal() {
               Global daily insights powered by real-time cosmic ephemeris and structural pressure indices.
             </p>
           </div>
+
+          {/* BURÇ FİLTRELEME BARIN (Yeni eklendi) */}
+          <div className="flex gap-3 overflow-x-auto py-4 no-scrollbar justify-start md:justify-center">
+            <button 
+              onClick={() => setActiveSign('all')}
+              className={`px-6 py-2 rounded-full border text-[9px] font-black uppercase transition-all ${activeSign === 'all' ? 'bg-[#D4AF37] border-[#D4AF37] text-black' : 'border-white/10 text-white/40'}`}
+            >
+              ALL
+            </button>
+            {ZODIAC_SIGNS.map(s => (
+              <button 
+                key={s.id}
+                onClick={() => setActiveSign(s.id)}
+                className={`px-6 py-2 rounded-full border text-[9px] font-black uppercase whitespace-nowrap transition-all ${activeSign === s.id ? 'bg-[#D4AF37] border-[#D4AF37] text-black' : 'border-white/10 text-white/40'}`}
+              >
+                {lang === 'tr' ? s.tr : s.name}
+              </button>
+            ))}
+          </div>
         </header>
 
         {loading ? (
@@ -99,42 +139,45 @@ export default function GlobalCosmosPortal() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {insights.map((item) => (
-              <div key={item.id} className="group relative rounded-[2.5rem] overflow-hidden bg-[#0a0a0a] border border-white/5 hover:border-[#D4AF37]/30 transition-all duration-500">
-                
-                <div className="p-8">
-                  {/* KART BAŞLIĞI: BURÇ VE KONU */}
-                  <div className="flex justify-between items-center mb-8">
-                    <div className="flex flex-col">
-                        <span className="text-[#D4AF37] font-black text-xs uppercase tracking-[0.3em]">{item.zodiac_sign}</span>
-                        <span className="text-[9px] text-white/20 font-bold uppercase">{item.target_date}</span>
-                    </div>
-                    <span className="bg-white/5 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white/50 border border-white/5">
-                        {item.topic}
-                    </span>
-                  </div>
-
-                  {/* İÇERİK */}
-                  <h3 className="text-xl font-bold mb-6 uppercase tracking-tight leading-tight group-hover:text-[#D4AF37] transition-colors duration-500">
-                    {item.meta_title}
-                  </h3>
+            {filteredInsights.map((item) => (
+              <Link 
+                key={item.id} 
+                href={`/${lang}/cosmos/${item.topic.toLowerCase()}/${item.zodiac_sign.toLowerCase()}`}
+                className="group relative rounded-[2.5rem] overflow-hidden bg-[#0a0a0a] border border-white/5 hover:border-[#D4AF37]/30 transition-all duration-500"
+              >
+                {/* BURÇ GÖRSELİ (Yeni eklendi) */}
+                <div className="aspect-[4/5] relative overflow-hidden">
+                  <img 
+                    src={`/images/zodiac/${item.zodiac_sign.toLowerCase()}.jpg`} 
+                    alt={item.zodiac_sign}
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110 opacity-60"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent"></div>
                   
-                  <div className="text-sm text-white/50 leading-relaxed font-medium space-y-4">
-                     {/* Gövde metni (İlk 250 karakteri göster, hoverda tamamını aç) */}
-                     <p className="line-clamp-5 group-hover:line-clamp-none transition-all duration-1000 ease-in-out">
-                        {item.content_body}
-                     </p>
+                  {/* KART İÇERİĞİ OVERLAY */}
+                  <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex flex-col">
+                          <span className="text-[#D4AF37] font-black text-xs uppercase tracking-[0.3em]">{item.zodiac_sign}</span>
+                          <span className="text-[9px] text-white/40 font-bold uppercase">{item.target_date}</span>
+                      </div>
+                      <span className="bg-white/5 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white/50 border border-white/5">
+                          {item.topic}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-bold mb-4 uppercase tracking-tight leading-tight group-hover:text-[#D4AF37] transition-colors duration-500">
+                      {item.meta_title}
+                    </h3>
+
+                    <div className="text-xs text-white/50 leading-relaxed font-medium line-clamp-3">
+                      {item.content_body}
+                    </div>
                   </div>
                 </div>
 
-                {/* ALTIN PANEL AYIRICI (Characters sayfasındaki estetik) */}
                 <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent opacity-20 group-hover:opacity-100 transition-opacity duration-700"></div>
-                
-                {/* FAQ SNEAK PEEK (Opsiyonel) */}
-                <div className="px-8 py-4 bg-white/[0.02] opacity-0 group-hover:opacity-100 transition-all duration-500">
-                    <p className="text-[8px] font-black text-cyan-400 tracking-widest uppercase">Deep Insight Available</p>
-                </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
