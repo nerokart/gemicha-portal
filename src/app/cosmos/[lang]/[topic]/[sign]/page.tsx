@@ -12,12 +12,14 @@ const ZODIAC_DICT: Record<string, Record<string, string>> = {
   en: { koc: 'Aries', boga: 'Taurus', ikizler: 'Gemini', yengec: 'Cancer', aslan: 'Leo', basak: 'Virgo', terazi: 'Libra', akrep: 'Scorpio', yay: 'Sagittarius', oglak: 'Capricorn', kova: 'Aquarius', balik: 'Pisces' }
 };
 
+// Next.js 15+ için params bir Promise olarak tanımlanmalıdır
 export default async function ZodiacArticle({ params }: { params: Promise<{ lang: string, topic: string, sign: string }> }) {
-  // 1. KRİTİK HATA ÇÖZÜMÜ: params nesnesi await edilmeli
-  const resolvedParams = await params;
-  const cleanLang = decodeURIComponent(resolvedParams.lang).trim();
-  const cleanTopic = decodeURIComponent(resolvedParams.topic).trim();
-  const cleanSign = decodeURIComponent(resolvedParams.sign).trim();
+  
+  // 1. SUNUCU HATASINI ÇÖZEN KRİTİK SATIR (Await Params)
+  const resolvedParams = await params; 
+  const cleanLang = decodeURIComponent(resolvedParams.lang || 'en').trim();
+  const cleanTopic = decodeURIComponent(resolvedParams.topic || '').trim();
+  const cleanSign = decodeURIComponent(resolvedParams.sign || '').trim();
 
   const { data: insights } = await supabase
     .from('gemicha_insights')
@@ -33,99 +35,105 @@ export default async function ZodiacArticle({ params }: { params: Promise<{ lang
   if (!insight) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-10 font-['Plus_Jakarta_Sans',sans-serif]">
-        <h1 className="text-[#D4AF37] text-4xl font-black mb-4 uppercase">Kayıp Kayıt</h1>
-        <p className="text-white/40 text-sm mb-8 italic">"{cleanLang} - {cleanTopic} - {cleanSign}" veritabanında bulunamadı.</p>
-        <Link href="/cosmos" className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase hover:bg-white/10 transition">Geri Dön</Link>
+        <h1 className="text-[#D4AF37] text-4xl font-black mb-4 uppercase italic">Data Missing</h1>
+        <p className="text-white/40 text-sm mb-8 italic">Stars could not find this record: {cleanLang}/{cleanTopic}/{cleanSign}</p>
+        <Link href="/cosmos" className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase hover:bg-white/10 transition">Back to Cosmos</Link>
       </div>
     );
   }
 
   return (
-    <div className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black">
-      {/* BLOG TARZI NAV BAR */}
-      <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-6 backdrop-blur-md">
+    <div className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black flex flex-col">
+      
+      {/* BLOG STİLİ NAV - */}
+      <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-6 backdrop-blur-md shrink-0">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
           <Link href="/cosmos" className="flex items-center gap-3 group">
             <img src="https://gemicha-portal.vercel.app/logo.png" alt="Logo" className="h-10 w-auto rounded-lg" />
             <span className="text-xl font-black tracking-widest uppercase">GEMICHA</span>
           </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-[10px] font-black uppercase text-white/50 hover:text-white transition">HOME</Link>
-            <div className="h-4 w-[1px] bg-white/10"></div>
-            <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-[0.2em]">{cleanLang}</span>
+          <div className="flex items-center gap-4">
+             <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-[0.2em]">{cleanLang}</span>
+             <div className="h-4 w-[1px] bg-white/10"></div>
+             <Link href="/cosmos" className="text-[10px] font-black uppercase text-white/50 hover:text-white transition">EXPLORE</Link>
           </div>
         </div>
       </nav>
 
-      <main className="flex flex-col md:flex-row min-h-[calc(100vh-80px)]">
-        {/* SOL TARAF: BLOG SIDEBAR MANTIĞI */}
-        <aside className="w-full md:w-[400px] border-r border-white/5 bg-[#050505] p-8 md:p-12 shrink-0">
-          <div className="sticky top-32">
-             <div className="flex items-center gap-2 mb-8">
-                <span className="px-3 py-1 bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black rounded-full uppercase tracking-widest">
-                  {cleanTopic} Report
-                </span>
-             </div>
-             
-             <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.9] mb-8">
-               {ZODIAC_DICT[cleanLang]?.[cleanSign] || cleanSign} <br/>
-               <span className="text-white/20">Cosmic Analysis</span>
-             </h1>
+      <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
+        
+        {/* SIDEBAR - BLOG PANEL MANTIĞI */}
+        <aside className="w-full md:w-[450px] bg-[#020202] border-r border-white/5 p-8 md:p-16 flex flex-col shrink-0 overflow-y-auto no-scrollbar">
+           <div className="mb-8">
+              <span className="bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full uppercase tracking-[0.3em] mb-8 inline-block">
+                NEURAL {cleanTopic} REPORT
+              </span>
+              <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-[0.85] mb-6">
+                {ZODIAC_DICT[cleanLang]?.[cleanSign] || cleanSign} <br/>
+                <span className="text-white/10">Insight</span>
+              </h1>
+              <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest">{insight.target_date}</p>
+           </div>
 
-             <div className="space-y-6">
-                <div className="p-6 bg-white/5 border border-white/5 rounded-3xl group hover:border-[#D4AF37]/30 transition-all">
-                   <p className="text-[10px] font-black text-white/30 uppercase mb-2 tracking-widest">Target Date</p>
-                   <p className="text-xl font-bold text-white group-hover:text-[#D4AF37] transition-colors">{insight.target_date}</p>
-                </div>
-                
-                <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
-                   <p className="text-[10px] font-black text-white/30 uppercase mb-4 tracking-widest">Sign Status</p>
-                   <img 
-                     src={`https://gemicha-portal.vercel.app/images/zodiac/${cleanSign}.webp`} 
-                     className="w-full h-40 object-cover rounded-2xl grayscale hover:grayscale-0 transition-all duration-700" 
-                     alt={cleanSign}
-                   />
-                </div>
-             </div>
-          </div>
+           <div className="relative rounded-[2rem] overflow-hidden border border-white/5 mb-8 group">
+              <img 
+                src={`https://gemicha-portal.vercel.app/images/zodiac/${cleanSign}.webp`} 
+                className="w-full h-64 object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-105" 
+                alt={cleanSign}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-transparent to-transparent"></div>
+           </div>
+
+           <div className="mt-auto p-6 bg-white/5 rounded-3xl border border-white/5">
+              <p className="text-[9px] font-black text-cyan-400 uppercase tracking-widest mb-2">Cosmic Integrity</p>
+              <p className="text-xs text-white/40 leading-relaxed italic">Neural architecture analysis complete. Data synchronized with real-time planetary pressure indices.</p>
+           </div>
         </aside>
 
-        {/* SAĞ TARAF: BLOG MAKALE MANTIĞI */}
-        <div className="flex-1 bg-black p-8 md:p-20 overflow-y-auto">
+        {/* ARTICLE BODY - BLOG OKUMA ALANI */}
+        <main className="flex-1 bg-black overflow-y-auto p-8 md:p-20 no-scrollbar">
           <div className="max-w-3xl mx-auto">
-            {/* Dramatik Spot Metni */}
-            <p className="text-2xl md:text-3xl font-light italic text-[#D4AF37] mb-20 border-l-2 border-[#D4AF37] pl-10 leading-relaxed opacity-90">
-              "The stars do not compel, they impel. This is your neural cosmic map for the current structural cycle."
-            </p>
-
-            {/* Ana İçerik - Blog Stili */}
-            <div className="prose prose-invert max-w-none">
-              <div className="text-xl leading-[2] text-white/70 space-y-10 first-letter:text-7xl first-letter:font-black first-letter:text-[#D4AF37] first-letter:mr-4 first-letter:float-left first-letter:mt-2">
-                {insight.content_body}
-              </div>
+            
+            {/* Dramatik Giriş */}
+            <div className="mb-20">
+              <p className="text-2xl md:text-4xl font-light italic text-[#D4AF37] leading-relaxed opacity-90 border-l-4 border-[#D4AF37] pl-8">
+                "The stars do not compel, they impel. This is your personal cosmic weather report."
+              </p>
             </div>
 
-            {/* FAQ / Soru-Cevap Alanı */}
+            {/* Makale İçeriği */}
+            <article className="prose prose-invert max-w-none">
+              <div className="text-xl leading-[2.1] text-white/70 space-y-12 first-letter:text-8xl first-letter:font-black first-letter:text-[#D4AF37] first-letter:mr-5 first-letter:float-left first-letter:mt-3">
+                {insight.content_body}
+              </div>
+            </article>
+
+            {/* FAQ - Blog Akordeon Stili */}
             <section className="mt-32 pt-20 border-t border-white/5">
-              <h4 className="text-[10px] font-black tracking-[0.5em] uppercase text-cyan-500 mb-12">Neural FAQ Matrix</h4>
-              <div className="space-y-6">
+              <h3 className="text-[10px] font-black tracking-[0.6em] uppercase text-cyan-500 mb-12">Neural Q&A Matrix</h3>
+              <div className="grid gap-6">
                 {JSON.parse(insight.faq_schema || "[]").map((faq: any, idx: number) => (
-                  <div key={idx} className="bg-white/5 p-10 rounded-[2.5rem] border border-white/5 group hover:border-cyan-500/30 transition-all">
-                    <p className="text-cyan-400 font-black text-xs mb-4 uppercase tracking-widest leading-relaxed">Q: {faq.question}</p>
-                    <p className="text-white/40 text-sm leading-[1.8] font-medium italic">A: {faq.answer}</p>
+                  <div key={idx} className="bg-white/5 p-10 rounded-[3rem] border border-white/5 hover:border-cyan-500/30 transition-all group">
+                    <p className="text-cyan-400 font-black text-xs mb-4 uppercase tracking-widest">Q: {faq.question}</p>
+                    <p className="text-white/40 text-sm leading-relaxed italic group-hover:text-white/60 transition-colors">A: {faq.answer}</p>
                   </div>
                 ))}
               </div>
             </section>
 
-            {/* Footer Alanı */}
-            <footer className="mt-32 pt-20 border-t border-white/5 text-center md:text-left">
-               <p className="text-[10px] text-slate-700 font-bold tracking-[0.5em] uppercase mb-4 italic">Neural Engine v3.14</p>
-               <p className="text-[9px] text-slate-800 tracking-[0.2em] uppercase">© 2026 GEMICHA | ALL CELESTIAL RIGHTS RESERVED</p>
+            {/* Footer */}
+            <footer className="mt-32 pb-20 opacity-20 text-center md:text-left">
+               <p className="text-[10px] font-black tracking-[0.5em] uppercase mb-2">GEMICHA NEURAL ENGINE v3.0</p>
+               <p className="text-[9px] uppercase tracking-widest">Celestial Rights Reserved © 2026</p>
             </footer>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
+
+      <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 }
