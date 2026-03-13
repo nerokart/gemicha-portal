@@ -142,7 +142,7 @@ export default function GlobalCosmosPortal() {
             {filteredInsights.map((item) => (
               <Link 
                 key={item.id} 
-                href={`/${lang}/cosmos/${item.topic.toLowerCase()}/${item.zodiac_sign.toLowerCase()}`}
+                href={`/${lang}/${item.topic.toLowerCase()}/${item.zodiac_sign.toLowerCase()}`}
                 className="group relative rounded-[2.5rem] overflow-hidden bg-[#0a0a0a] border border-white/5 hover:border-[#D4AF37]/30 transition-all duration-500"
               >
                 {/* BURÇ GÖRSELİ (Yeni eklendi) */}
