@@ -24,12 +24,12 @@ const LANG_NAMES = {
 
 // Filtreleme için Burç Listesi
 const ZODIAC_SIGNS = [
-  { id: 'aries', name: 'Aries', tr: 'Koç' }, { id: 'taurus', name: 'Taurus', tr: 'Boğa' },
-  { id: 'gemini', name: 'Gemini', tr: 'İkizler' }, { id: 'cancer', name: 'Cancer', tr: 'Yengeç' },
-  { id: 'leo', name: 'Leo', tr: 'Aslan' }, { id: 'virgo', name: 'Virgo', tr: 'Başak' },
-  { id: 'libra', name: 'Libra', tr: 'Terazi' }, { id: 'scorpio', name: 'Scorpio', tr: 'Akrep' },
-  { id: 'sagittarius', name: 'Sagittarius', tr: 'Yay' }, { id: 'capricorn', name: 'Capricorn', tr: 'Oğlak' },
-  { id: 'aquarius', name: 'Aquarius', tr: 'Kova' }, { id: 'pisces', name: 'Pisces', tr: 'Balık' }
+  { id: 'koc', name: 'Aries', tr: 'Koç' }, { id: 'boga', name: 'Taurus', tr: 'Boğa' },
+  { id: 'ikizler', name: 'Gemini', tr: 'İkizler' }, { id: 'yengec', name: 'Cancer', tr: 'Yengeç' },
+  { id: 'aslan', name: 'Leo', tr: 'Aslan' }, { id: 'basak', name: 'Virgo', tr: 'Başak' },
+  { id: 'terazi', name: 'Libra', tr: 'Terazi' }, { id: 'akrep', name: 'Scorpio', tr: 'Akrep' },
+  { id: 'yay', name: 'Sagittarius', tr: 'Yay' }, { id: 'oglak', name: 'Capricorn', tr: 'Oğlak' },
+  { id: 'kova', name: 'Aquarius', tr: 'Kova' }, { id: 'balik', name: 'Pisces', tr: 'Balık' }
 ];
 
 export default function GlobalCosmosPortal() {
