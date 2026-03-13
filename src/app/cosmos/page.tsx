@@ -211,7 +211,7 @@ export default function GlobalCosmosPortal() {
                 {/* BURÇ GÖRSELİ (Absolute Path Kullanıldı) */}
                 <div className="aspect-[4/5] relative overflow-hidden">
                   <img 
-                    src={`https://gemicha-portal.vercel.app/images/zodiac/${item.zodiac_sign.toLowerCase()}.jpg`} 
+                    src={`https://gemicha-portal.vercel.app/images/zodiac/${item.zodiac_sign.toLowerCase()}.webp`} 
                     alt={item.zodiac_sign}
                     className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110 opacity-60"
                   />
