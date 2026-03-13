@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import Link from 'next/link'; // Yönlendirme için eklendi
+import Link from 'next/link';
 
 // Supabase Global Bağlantı (Client-side)
 const supabase = createClient(
@@ -22,14 +22,12 @@ const LANG_NAMES = {
     az: "Azərbaycanca", kk: "Қазақша" 
 };
 
-// 1. Veritabanı ile eşleşen saf ID listesi
 const ZODIAC_SIGNS = [
   { id: 'koc' }, { id: 'boga' }, { id: 'ikizler' }, { id: 'yengec' },
   { id: 'aslan' }, { id: 'basak' }, { id: 'terazi' }, { id: 'akrep' },
   { id: 'yay' }, { id: 'oglak' }, { id: 'kova' }, { id: 'balik' }
 ];
 
-// 2. 46 Dilli Devasa Burç Sözlüğü (Global Zodiac Dictionary)
 const ZODIAC_DICT: Record<string, Record<string, string>> = {
   tr: { koc: 'Koç', boga: 'Boğa', ikizler: 'İkizler', yengec: 'Yengeç', aslan: 'Aslan', basak: 'Başak', terazi: 'Terazi', akrep: 'Akrep', yay: 'Yay', oglak: 'Oğlak', kova: 'Kova', balik: 'Balık' },
   en: { koc: 'Aries', boga: 'Taurus', ikizler: 'Gemini', yengec: 'Cancer', aslan: 'Leo', basak: 'Virgo', terazi: 'Libra', akrep: 'Scorpio', yay: 'Sagittarius', oglak: 'Capricorn', kova: 'Aquarius', balik: 'Pisces' },
@@ -79,12 +77,6 @@ const ZODIAC_DICT: Record<string, Record<string, string>> = {
   kk: { koc: 'Тоқты', boga: 'Торпақ', ikizler: 'Егіздер', yengec: 'Шаян', aslan: 'Арыстан', basak: 'Бикеш', terazi: 'Таразы', akrep: 'Сарышаян', yay: 'Мерген', oglak: 'Тауешкі', kova: 'Суқұйғыш', balik: 'Балықтар' }
 };
 
-// 3. Akıllı Çeviri Fonksiyonu (Eğer dil sözlükte yoksa otomatik İngilizce gösterir)
-const getSignName = (id: string, currentLang: string) => {
-  return ZODIAC_DICT[currentLang]?.[id] || ZODIAC_DICT['en'][id];
-};
-
-// 4. "TÜMÜ" Butonu İçin 46 Dilli Çeviri Sözlüğü
 const UI_ALL: Record<string, string> = {
   tr: 'TÜMÜ', en: 'ALL', es: 'TODO', pt: 'TUDO', ar: 'الكل', fr: 'TOUT', it: 'TUTTI', ru: 'ВСЕ', zh: '全部', ja: 'すべて',
   ko: '전체', de: 'ALLE', nl: 'ALLES', pl: 'WSZYSTKO', sv: 'ALLA', da: 'ALLE', fi: 'KAIKKI', no: 'ALLE', cs: 'VŠE',
@@ -92,16 +84,23 @@ const UI_ALL: Record<string, string> = {
   vi: 'TẤT CẢ', uk: 'ВСЕ', fa: 'همه', ur: 'سب', ta: 'அனைத்தும்', te: 'అన్నీ', bg: 'ВСИЧКИ', tl: 'LAHAT', hr: 'SVE',
   sr: 'СВЕ', sk: 'VŠETKY', sl: 'VSE', et: 'KÕIK', lv: 'VISI', lt: 'VISI', ca: 'TOT', az: 'HAMISI', kk: 'БАРЛЫҒЫ'
 };
-const getAllText = (currentLang: string) => UI_ALL[currentLang] || 'ALL';
+const TOPICS = [
+  { id: 'all', tr: 'TÜMÜ', en: 'ALL' },
+  { id: 'ask', tr: 'AŞK', en: 'LOVE' },
+  { id: 'kariyer', tr: 'KARİYER', en: 'CAREER' },
+  { id: 'saglik', tr: 'SAĞLIK', en: 'HEALTH' },
+  { id: 'para', tr: 'PARA', en: 'FINANCE' }
+];
 
 export default function GlobalCosmosPortal() {
   const [insights, setInsights] = useState<any[]>([]);
   const [lang, setLang] = useState('en');
-  const [activeSign, setActiveSign] = useState('all'); // Filtreleme durumu
+  const [activeSign, setActiveSign] = useState('all');
+  const [activeTopic, setActiveTopic] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [playingId, setPlayingId] = useState<string | null>(null);
 
   useEffect(() => {
-    // 1. Kullanıcının dilini karakter sayfasındaki gibi yakala
     const savedLang = localStorage.getItem('gemicha_lang') || 'en';
     setLang(savedLang);
     document.documentElement.lang = savedLang;
@@ -110,12 +109,11 @@ export default function GlobalCosmosPortal() {
 
   const fetchGlobalInsights = async (selectedLang: string) => {
     setLoading(true);
-    // Bugünün verilerini çek
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('gemicha_insights')
       .select('*')
       .eq('language', selectedLang)
-      .order('zodiac_sign', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (data) setInsights(data);
     setLoading(false);
@@ -128,131 +126,153 @@ export default function GlobalCosmosPortal() {
     fetchGlobalInsights(newLang);
   };
 
-  // Filtreleme Mantığı
-  const filteredInsights = activeSign === 'all' 
-    ? insights 
-    : insights.filter(i => i.zodiac_sign.toLowerCase() === activeSign.toLowerCase());
+  const toggleSpeech = (text: string, id: string) => {
+    if (typeof window === 'undefined') return;
+    if (playingId === id) {
+      window.speechSynthesis.cancel();
+      setPlayingId(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    utterance.onend = () => setPlayingId(null);
+    setPlayingId(id);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const filteredInsights = insights.filter(i => {
+    const signMatch = activeSign === 'all' || i.zodiac_sign.toLowerCase() === activeSign.toLowerCase();
+    const topicMatch = activeTopic === 'all' || i.topic.toLowerCase() === activeTopic.toLowerCase();
+    return signMatch && topicMatch;
+  });
 
   return (
-    <div className="bg-[#000] text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-white selection:text-black">
+    <div className="bg-[#000] text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] flex flex-col overflow-hidden">
       
-      {/* GLOBAL NAV (Sitedeki standart bar) */}
-      <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/80 backdrop-blur-md px-4 md:px-8">
+      {/* NAV BAR */}
+      <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-[100] bg-black/80 backdrop-blur-md px-4 md:px-8 shrink-0">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
           <a href="/" className="flex items-center gap-3 group">
-            {/* Vercel Rewrite Kayıplarını Önlemek İçin Tam (Absolute) Linkler Kullanıldı */}
             <img src="https://gemicha-portal.vercel.app/logo.png" alt="Gemicha" className="h-10 w-auto rounded-lg" />
             <span className="text-xl font-extrabold tracking-widest uppercase">GEMICHA</span>
           </a>
-          
-          <div className="flex items-center gap-4 md:gap-8">
-            <a href="/characters" className="text-[10px] font-black uppercase text-white/70 hover:text-white transition">CHARACTERS</a>
-            <a href="/lab" className="text-[10px] font-black uppercase text-cyan-400 hover:text-white transition">LOGIN</a>
-            
-            {/* STANDART DİL BARIN (Sağda) */}
-            <select 
-              value={lang} 
-              onChange={(e) => changeLanguage(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase outline-none cursor-pointer hover:bg-white/10 transition"
-            >
-              {Object.entries(LANG_NAMES).map(([code, name]) => (
-                <option key={code} value={code} className="bg-[#111]">{name}</option>
-              ))}
-            </select>
-          </div>
+          <select 
+            value={lang} 
+            onChange={(e) => changeLanguage(e.target.value)}
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-[10px] font-bold uppercase outline-none cursor-pointer"
+          >
+            {Object.entries(LANG_NAMES).map(([code, name]) => (
+              <option key={code} value={code} className="bg-[#111]">{name}</option>
+            ))}
+          </select>
         </div>
       </nav>
 
-      {/* PORTAL MAIN CONTENT */}
-      <main className="pt-12 pb-24 px-6 max-w-7xl mx-auto w-full">
-        <header className="mb-16 text-center">
-          <h1 className="text-5xl md:text-8xl font-black mb-6 italic uppercase tracking-tighter bg-gradient-to-b from-white to-white/30 bg-clip-text text-transparent">
-            COSMOS ANALYTICS
-          </h1>
-          <div className="bg-white/5 border border-white/10 rounded-[2rem] p-5 max-w-3xl mx-auto mb-12 backdrop-blur-sm">
-            <p className="text-[10px] text-white/40 leading-relaxed uppercase tracking-[0.3em]">
-              Global daily insights powered by real-time cosmic ephemeris and structural pressure indices.
-            </p>
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* ASIDE - FILTERS (Desktop'ta Sol, Mobile'da üstte katlanır) */}
+        <aside className="w-full md:w-80 bg-[#020202] border-r border-white/5 flex flex-col shrink-0 z-40 overflow-y-auto no-scrollbar max-h-[35vh] md:max-h-full">
+          <div className="p-6 space-y-8">
+            {/* Burç Seçimi Grid */}
+            <div>
+              <h3 className="text-[10px] font-black text-gray-500 mb-4 uppercase tracking-widest">Zodiac Signs</h3>
+              <div className="grid grid-cols-4 md:grid-cols-3 gap-2">
+                <button 
+                  onClick={() => setActiveSign('all')}
+                  className={`p-2 rounded-xl text-[9px] font-black border transition-all ${activeSign === 'all' ? 'bg-white text-black border-white' : 'bg-white/5 border-transparent text-gray-500'}`}
+                >
+                  {UI_ALL[lang] || 'ALL'}
+                </button>
+                {ZODIAC_SIGNS.map(s => (
+                  <button key={s.id} onClick={() => setActiveSign(s.id)}
+                    className={`p-2 rounded-xl text-[9px] font-black border transition-all uppercase ${activeSign === s.id ? 'bg-[#D4AF37] text-black border-[#D4AF37]' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}
+                  >
+                    {ZODIAC_DICT[lang]?.[s.id] || ZODIAC_DICT['en'][s.id]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Konu Seçimi Liste */}
+            <div>
+              <h3 className="text-[10px] font-black text-gray-500 mb-4 uppercase tracking-widest">Topic Analytics</h3>
+              <div className="space-y-2">
+                {TOPICS.map(t => (
+                  <button key={t.id} onClick={() => setActiveTopic(t.id)}
+                    className={`w-full text-left p-3 rounded-xl text-[10px] font-black border transition-all uppercase flex justify-between items-center ${activeTopic === t.id ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}
+                  >
+                    {lang === 'tr' ? t.tr : t.en}
+                    {activeTopic === t.id && <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_10px_cyan]"></div>}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
+        </aside>
 
-          {/* BURÇ FİLTRELEME BARIN (Dinamik ve Çok Dilli) */}
-          <div className="flex gap-3 overflow-x-auto py-4 no-scrollbar justify-start md:justify-center">
-            <button 
-              onClick={() => setActiveSign('all')}
-              className={`px-6 py-2 rounded-full border text-[9px] font-black uppercase transition-all ${activeSign === 'all' ? 'bg-[#D4AF37] border-[#D4AF37] text-black' : 'border-white/10 text-white/40 hover:border-white/30'}`}
-            >
-              {getAllText(lang)}
-            </button>
-            {ZODIAC_SIGNS.map(s => (
-              <button 
-                key={s.id}
-                onClick={() => setActiveSign(s.id)}
-                className={`px-6 py-2 rounded-full border text-[9px] font-black uppercase whitespace-nowrap transition-all ${activeSign === s.id ? 'bg-[#D4AF37] border-[#D4AF37] text-black' : 'border-white/10 text-white/40 hover:border-white/30'}`}
-              >
-                {getSignName(s.id, lang)}
-              </button>
-            ))}
-          </div>
-        </header>
+        {/* MAIN - CONTENT LIST */}
+        <main className="flex-1 bg-black overflow-y-auto no-scrollbar p-6 md:p-12 pb-32">
+          <header className="mb-12">
+            <span className="text-cyan-500 text-[10px] font-black tracking-[0.4em] mb-3 block uppercase">INSIGHTS & COSMOS</span>
+            <h2 className="text-4xl md:text-7xl font-black text-white italic uppercase tracking-tighter">
+              {activeSign === 'all' ? 'Global' : (ZODIAC_DICT[lang]?.[activeSign] || activeSign)} <span className="text-white/20">Analysis</span>
+            </h2>
+          </header>
 
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-             <div className="w-12 h-12 border-4 border-cyan-400/20 border-t-cyan-400 rounded-full animate-spin"></div>
-             <p className="text-[10px] font-black tracking-[0.5em] text-cyan-400 animate-pulse uppercase">Syncing with Stars...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredInsights.map((item) => (
-              <Link 
-                key={item.id} 
-                href={`/cosmos/${lang}/${item.topic.toLowerCase()}/${item.zodiac_sign.toLowerCase()}`}
-                className="group relative rounded-[2.5rem] overflow-hidden bg-[#0a0a0a] border border-white/5 hover:border-[#D4AF37]/30 transition-all duration-500"
-              >
-                {/* BURÇ GÖRSELİ (Absolute Path Kullanıldı) */}
-                <div className="aspect-[4/5] relative overflow-hidden">
-                  <img 
-                    src={`https://gemicha-portal.vercel.app/images/zodiac/${item.zodiac_sign.toLowerCase()}.webp`} 
-                    alt={item.zodiac_sign}
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-110 opacity-60"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent"></div>
-                  
-                  {/* KART İÇERİĞİ OVERLAY */}
-                  <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex flex-col">
-                          <span className="text-[#D4AF37] font-black text-xs uppercase tracking-[0.3em]">{item.zodiac_sign}</span>
-                          <span className="text-[9px] text-white/40 font-bold uppercase">{item.target_date}</span>
-                      </div>
-                      <span className="bg-white/5 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white/50 border border-white/5">
-                          {item.topic}
-                      </span>
-                    </div>
-
-                    <h3 className="text-xl font-bold mb-4 uppercase tracking-tight leading-tight group-hover:text-[#D4AF37] transition-colors duration-500">
-                      {item.meta_title}
-                    </h3>
-
-                    <div className="text-xs text-white/50 leading-relaxed font-medium line-clamp-3">
-                      {item.content_body}
-                    </div>
+          {loading ? (
+             <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="w-10 h-10 border-2 border-cyan-400/20 border-t-cyan-400 rounded-full animate-spin"></div>
+             </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl">
+              {filteredInsights.map((item) => (
+                <article key={item.id} className="group relative bg-[#050505] border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-[#D4AF37]/30 transition-all duration-500">
+                  <div className="aspect-video relative overflow-hidden">
+                    <img 
+                      src={`https://gemicha-portal.vercel.app/images/zodiac/${item.zodiac_sign.toLowerCase()}.webp`} 
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105 opacity-50" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent"></div>
+                    
+                    {/* Seslendirme Butonu */}
+                    <button 
+                      onClick={() => toggleSpeech(item.content_body, item.id)}
+                      className={`absolute top-6 right-6 p-4 rounded-2xl border backdrop-blur-md transition-all z-20 ${playingId === item.id ? 'bg-cyan-500 border-cyan-400 text-black' : 'bg-white/5 border-white/10 text-white hover:bg-white/20'}`}
+                    >
+                      <i className={`fa-solid ${playingId === item.id ? 'fa-stop' : 'fa-play'}`}></i>
+                    </button>
                   </div>
-                </div>
 
-                <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent opacity-20 group-hover:opacity-100 transition-opacity duration-700"></div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </main>
+                  <div className="p-8">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-[#D4AF37] font-black text-[10px] tracking-widest uppercase">{item.zodiac_sign}</span>
+                      <span className="bg-white/5 px-3 py-1 rounded-full text-[9px] font-black text-white/40 uppercase">{item.topic}</span>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-4 uppercase leading-tight group-hover:text-white transition-colors">{item.meta_title}</h3>
+                    <p className="text-sm text-white/50 leading-relaxed line-clamp-3 mb-6 font-medium">{item.content_body}</p>
+                    <Link 
+                      href={`/cosmos/${lang}/${item.topic.toLowerCase()}/${item.zodiac_sign.toLowerCase()}`}
+                      className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-cyan-400 hover:text-white transition-colors"
+                    >
+                      Open Neural Report <i className="fa-solid fa-arrow-right"></i>
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
 
       {/* FOOTER */}
-      <footer className="py-16 text-center border-t border-white/5 bg-black mt-auto">
-         <div className="max-w-7xl mx-auto px-6">
-            <p className="text-[10px] text-slate-700 font-bold tracking-[0.5em] uppercase mb-4 italic">Global Insight Engine v3.0</p>
-            <p className="text-[9px] text-slate-800 tracking-[0.2em] uppercase">© 2026 GEMICHA | ALL CELESTIAL RIGHTS RESERVED</p>
-         </div>
+      <footer className="py-10 text-center border-t border-white/5 bg-black shrink-0">
+        <p className="text-[9px] text-slate-800 font-black tracking-widest uppercase">© 2026 GEMICHA | ALL CELESTIAL RIGHTS RESERVED</p>
       </footer>
+
+      <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 }
