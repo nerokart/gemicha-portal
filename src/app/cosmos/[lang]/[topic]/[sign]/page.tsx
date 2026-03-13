@@ -23,7 +23,7 @@ export default async function ZodiacArticle({ params }: { params: { lang: string
       {/* 1. HERO AREA - Dramatik Blog Girişi */}
       <div className="relative h-[75vh] w-full flex items-end pb-20 overflow-hidden">
         {/* DİKKAT: Vercel Rewrite krizini aşmak için Absolute (Tam) Link kullanıldı */}
-        <img src={`https://gemicha-portal.vercel.app/images/zodiac/${params.sign}.jpg`} className="absolute inset-0 w-full h-full object-cover opacity-40 scale-110 animate-slow-zoom" />
+        <img src={`https://gemicha-portal.vercel.app/images/zodiac/${params.sign}.webp`} className="absolute inset-0 w-full h-full object-cover opacity-40 scale-110 animate-slow-zoom" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-[#050505]" />
         
         <div className="relative max-w-4xl mx-auto px-6 text-center">
