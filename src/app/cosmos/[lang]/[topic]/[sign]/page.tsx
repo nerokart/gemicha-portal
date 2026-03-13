@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
+// Supabase Bağlantısı
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY!
@@ -12,13 +12,21 @@ const ZODIAC_DICT: Record<string, Record<string, string>> = {
   en: { koc: 'Aries', boga: 'Taurus', ikizler: 'Gemini', yengec: 'Cancer', aslan: 'Leo', basak: 'Virgo', terazi: 'Libra', akrep: 'Scorpio', yay: 'Sagittarius', oglak: 'Capricorn', kova: 'Aquarius', balik: 'Pisces' }
 };
 
-export default async function ZodiacArticle({ params }: { params: Promise<{ lang: string, topic: string, sign: string }> }) {
-  
-  const resolvedParams = await params; 
-  const cleanLang = decodeURIComponent(resolvedParams.lang || 'en').trim();
-  const cleanTopic = decodeURIComponent(resolvedParams.topic || '').trim();
-  const cleanSign = decodeURIComponent(resolvedParams.sign || '').trim();
+// Next.js 16 Zorunluluğu: Params tipini Promise olarak tanımlıyoruz
+type PageParams = { lang: string; topic: string; sign: string };
 
+export default async function ZodiacArticle({ params }: { params: Promise<PageParams> }) {
+  
+  // 1. HATAYI ÇÖZEN KRİTİK ADIM: Params nesnesini güvenli bir şekilde bekliyoruz
+  const resolvedParams = await params; 
+  
+  const { lang, topic, sign } = resolvedParams;
+
+  const cleanLang = decodeURIComponent(lang || 'en').trim();
+  const cleanTopic = decodeURIComponent(topic || '').trim();
+  const cleanSign = decodeURIComponent(sign || '').trim();
+
+  // Veritabanı Sorgusu
   const { data: insights } = await supabase
     .from('gemicha_insights')
     .select('*')
@@ -30,12 +38,13 @@ export default async function ZodiacArticle({ params }: { params: Promise<{ lang
 
   const insight = insights?.[0];
 
+  // Veri yoksa şık bir uyarı ekranı (Blog stili)
   if (!insight) {
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-10 font-['Plus_Jakarta_Sans',sans-serif]">
-        <h1 className="text-[#D4AF37] text-4xl font-black mb-4 uppercase italic">Data Missing</h1>
-        <p className="text-white/40 text-sm mb-8 italic">Stars could not find this record: {cleanLang}/{cleanTopic}/{cleanSign}</p>
-        <Link href="/cosmos" className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase hover:bg-white/10 transition">Back to Cosmos</Link>
+        <h1 className="text-[#D4AF37] text-4xl font-black mb-4 uppercase italic">Data Sync Error</h1>
+        <p className="text-white/40 text-sm mb-8 italic">Neural record not found: {cleanLang}/{cleanTopic}/{cleanSign}</p>
+        <Link href="/cosmos" className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase hover:bg-white/10 transition">Back to Hub</Link>
       </div>
     );
   }
@@ -43,7 +52,7 @@ export default async function ZodiacArticle({ params }: { params: Promise<{ lang
   return (
     <div className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black flex flex-col overflow-x-hidden">
       
-      {/* NAV BAR - Blog Sayfası Stili */}
+      {/* BLOG STİLİ NAV - */}
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-6 backdrop-blur-md shrink-0">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
           <Link href="/cosmos" className="flex items-center gap-3 group">
@@ -52,7 +61,7 @@ export default async function ZodiacArticle({ params }: { params: Promise<{ lang
           </Link>
           <div className="flex items-center gap-4">
              <span className="text-[10px] font-black uppercase text-[#D4AF37] tracking-[0.2em]">{cleanLang}</span>
-             <div className="h-4 w-[1px] bg-white/10"></div>
+             <div className="h-4 w-[1px] bg-white/10 mx-2"></div>
              <Link href="/cosmos" className="text-[10px] font-black uppercase text-white/50 hover:text-white transition">EXPLORE</Link>
           </div>
         </div>
@@ -89,7 +98,7 @@ export default async function ZodiacArticle({ params }: { params: Promise<{ lang
         </aside>
 
         {/* MAIN CONTENT AREA - Blog Makale Mantığı */}
-        <main className="flex-1 bg-black p-8 md:p-20 overflow-y-auto custom-scrollbar">
+        <main className="flex-1 bg-black p-8 md:p-20 overflow-y-auto">
           <div className="max-w-3xl mx-auto">
             
             {/* Apple Tarzı Dramatik Giriş */}
@@ -106,7 +115,7 @@ export default async function ZodiacArticle({ params }: { params: Promise<{ lang
               </div>
             </article>
 
-            {/* FAQ - Soru-Cevap */}
+            {/* FAQ - Blog Soru-Cevap Stili */}
             <section className="mt-32 pt-20 border-t border-white/5">
               <h3 className="text-[10px] font-black tracking-[0.6em] uppercase text-cyan-500 mb-12">Neural Q&A Matrix</h3>
               <div className="grid gap-6">
