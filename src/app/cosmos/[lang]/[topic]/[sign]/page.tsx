@@ -23,7 +23,7 @@ export default function ZodiacArticle() {
   const rawDate = searchParams.get('date');
 
   const dbTopic = getBaseIdFromLocalized(TOPICS_DICT, rawLang, rawTopic);
-  const dbSign = getBaseIdFromLocalized(ZODIAC_DICT, rawLang, rawSign);
+  const dbSign = getBaseIdFromLocalized(ZODIAC_DICT, rawLang, dbSign);
 
   // RTL ve Tipografi Ayarları
   const rtlLangs = ['ar', 'he', 'fa', 'ur'];
@@ -33,11 +33,31 @@ export default function ZodiacArticle() {
   const trackingTight = isRTL ? 'tracking-normal' : 'tracking-tighter';
   const fontItalic = isRTL ? 'not-italic' : 'italic';
 
+  // SEO VE DİL AYARLARI GÜNCELLEMESİ
   useEffect(() => {
     window.speechSynthesis.cancel();
     document.documentElement.dir = rtlLangs.includes(rawLang) ? 'rtl' : 'ltr';
+
+    if (insight) {
+      // CSV hatasını çözen dinamik Title (Başlık) güncellemesi
+      const displaySignName = getUIString(ZODIAC_DICT, rawLang, dbSign, dbSign);
+      const displayTopicName = getUIString(TOPICS_DICT, rawLang, dbTopic, dbTopic);
+      const fullTitle = `${safeUpper(displaySignName, rawLang)} ${safeUpper(displayTopicName, rawLang)} - ${insight.target_date} Daily Analysis | Gemicha`;
+      document.title = fullTitle;
+
+      // CSV hatasını çözen dinamik Meta Description güncellemesi
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      // İçeriğin ilk 160 karakterini alarak açıklama yapar (SEO uyumlu uzunluk)
+      metaDesc.setAttribute("content", insight.content_body.substring(0, 160).replace(/\s+/g, ' ').trim() + "...");
+    }
+
     return () => { window.speechSynthesis.cancel(); };
-  }, [params.lang, params.topic, params.sign, rawDate]);
+  }, [params.lang, params.topic, params.sign, rawDate, insight, rawLang, dbSign, dbTopic]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,7 +135,6 @@ export default function ZodiacArticle() {
                {Object.entries(LANG_NAMES).map(([code, fallbackName]) => {
                   let displayLangName = fallbackName;
                   try {
-                      // Aktif dile göre (rawLang) dillerin adını anında çevirir!
                       const translated = new Intl.DisplayNames([rawLang], { type: 'language' }).of(code);
                       if (translated) displayLangName = translated;
                   } catch (e) {}
@@ -133,7 +152,6 @@ export default function ZodiacArticle() {
               <span className={`bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full mb-6 inline-block ${trackingWide}`}>
                 {safeUpper(`NEURAL ${displayTopic}`, rawLang)}
               </span>
-              {/* BURADAKİ FONT KÜÇÜLTÜLDÜ: text-6xl -> text-5xl ve altı yapıldı ki isim yatayda sığsın! */}
               <h1 className={`text-3xl md:text-4xl lg:text-5xl font-black leading-[0.85] mb-4 break-words w-full overflow-hidden ${fontItalic} ${trackingTight}`}>
                 {safeUpper(displaySign, rawLang)}
               </h1>
