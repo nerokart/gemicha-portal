@@ -116,7 +116,7 @@ export default function GlobalCosmosPortal() {
                 <span className="text-cyan-500 text-[10px] font-black tracking-[0.4em] mb-3 block uppercase">
                   {safeUpper(getUIString(UI_DICT, lang, 'insights_cosmos', 'Insights & Cosmos'), lang)}
                 </span>
-                <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase">
+<h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter">
                   {safeUpper(activeSign === 'all' ? getUIString(UI_DICT, lang, 'global', 'Global') : getUIString(ZODIAC_DICT, lang, activeSign, activeSign), lang)} 
                   <span className="text-white/20 ml-3">{safeUpper(getUIString(UI_DICT, lang, 'analysis', 'Analysis'), lang)}</span>
                 </h2>
