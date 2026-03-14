@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-// İŞTE BURASI DÜZELTİLDİ: Artık @/ yerine ../../../../../ kullanıyoruz
 import { LANG_NAMES, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getBaseIdFromLocalized, getUIString, safeUpper } from '../../../../../lib/cosmos-constants';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -43,6 +42,7 @@ export default function ZodiacArticle() {
       if (data && data[0]) {
          setInsight(data[0]);
          try { 
+            // Burada Supabase'den gelen tüüüüm soruları alıp diziye koyar. Kod kısaltma yapmaz!
             setFaqData(typeof data[0].faq_schema === 'string' ? JSON.parse(data[0].faq_schema) : data[0].faq_schema); 
          } catch(e) {}
       }
@@ -58,6 +58,13 @@ export default function ZodiacArticle() {
     router.push(`/cosmos/${newLang}/${newTopicSlug}/${newSignSlug}${rawDate ? `?date=${rawDate}` : ''}`);
   };
 
+  const handleDateChange = (newDate: string) => {
+    const tSlug = slugify(getUIString(TOPICS_DICT, rawLang, dbTopic, dbTopic));
+    const sSlug = slugify(getUIString(ZODIAC_DICT, rawLang, dbSign, dbSign));
+    router.push(`/cosmos/${rawLang}/${tSlug}/${sSlug}?date=${newDate}`);
+  };
+
+  // HOPARLÖR SİSTEMİ
   const toggleAudio = () => {
     if (typeof window === 'undefined') return;
     if (playingState === 'playing') { window.speechSynthesis.pause(); setPlayingState('paused'); return; }
@@ -98,7 +105,7 @@ export default function ZodiacArticle() {
       
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-6 backdrop-blur-md shrink-0">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
-          <Link href="/cosmos" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-3 group">
             <img src="https://gemicha-portal.vercel.app/logo.png" className="h-10 rounded-lg" alt="Gemicha Logo" />
             <span className="text-xl font-black tracking-widest text-white">{safeUpper("GEMICHA", rawLang)}</span>
           </Link>
@@ -116,6 +123,7 @@ export default function ZodiacArticle() {
 
       <div className="flex flex-1 flex-col md:flex-row">
         
+        {/* SOL PANEL VE FİLTRELER (Geri Eklendi) */}
         <aside className="w-full md:w-[450px] bg-[#020202] border-r border-white/5 p-8 md:p-12 flex flex-col shrink-0">
            <div className="mb-6">
               <span className="bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full tracking-[0.3em] mb-6 inline-block">
@@ -131,22 +139,53 @@ export default function ZodiacArticle() {
               <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-transparent to-transparent"></div>
            </div>
 
+           {/* TAKVİM FİLTRESİ */}
+           <div className="mb-6">
+              <input 
+                type="date" 
+                value={insight.target_date} 
+                onChange={(e) => handleDateChange(e.target.value)}
+                onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:border-cyan-400 transition-all cursor-pointer"
+              />
+           </div>
+
+           {/* KONU FİLTRELERİ (AŞK, PARA, SAĞLIK - GERİ GELDİ) */}
+           <div className="space-y-2 mb-8">
+              {['ask', 'kariyer', 'saglik', 'para'].map(t => {
+                 const isCurrent = t === dbTopic;
+                 const tSlug = slugify(getUIString(TOPICS_DICT, rawLang, t, t));
+                 const sSlug = slugify(getUIString(ZODIAC_DICT, rawLang, dbSign, dbSign));
+                 return (
+                   <Link key={t} href={`/cosmos/${rawLang}/${tSlug}/${sSlug}${rawDate ? `?date=${rawDate}` : ''}`}
+                     className={`w-full text-left p-3 rounded-xl text-[10px] font-black border transition-all flex justify-between items-center ${isCurrent ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}
+                   >
+                     {safeUpper(getUIString(TOPICS_DICT, rawLang, t, t), rawLang)}
+                     {isCurrent && <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_10px_cyan]"></div>}
+                   </Link>
+                 );
+              })}
+           </div>
+
+           {/* EKSİKSİZ UZUN YASAL UYARI KÖŞESİ */}
            <div className="mt-auto p-6 bg-red-500/5 border border-red-500/10 rounded-3xl">
               <p className="text-[9px] font-black text-red-400 tracking-widest mb-2 flex items-center gap-2 uppercase">
                 <i className="fa-solid fa-triangle-exclamation"></i> {getUIString(UI_DICT, rawLang, 'legal', 'Legal Disclaimer')}
               </p>
               <p className="text-[11px] text-white/50 leading-relaxed font-medium">
-                {getUIString(UI_DICT, rawLang, 'warning', 'These analyses are AI-generated. They do not constitute financial or medical advice.')}
+                {getUIString(UI_DICT, rawLang, 'warning', 'These analyses are AI-generated based on astronomical data. Commercial use or sharing for profit is strictly prohibited.')}
               </p>
            </div>
         </aside>
 
+        {/* MAKALE ALANI */}
         <main className="flex-1 bg-black p-8 md:p-20 overflow-y-auto relative no-scrollbar">
           <div className="max-w-3xl mx-auto">
             
             <div className="mb-12">
               <h2 className="text-3xl font-bold mb-8 text-white/90 uppercase">{insight.meta_title}</h2>
               
+              {/* BLOG TARZI HOPARLÖR OYNATICI */}
               <div className="flex items-center gap-2 mb-10 p-2 bg-white/5 rounded-2xl border border-white/10 w-max shadow-2xl shadow-black">
                   <div className="px-3 border-r border-white/10">
                       <i className={`fa-solid ${playingState === 'playing' ? 'fa-waveform text-cyan-400 animate-pulse' : 'fa-volume-high text-slate-500'}`}></i>
@@ -160,6 +199,7 @@ export default function ZodiacArticle() {
                   </button>
               </div>
 
+              {/* DİLE GÖRE DİNAMİK SÖZ */}
               <p className="text-2xl md:text-3xl font-light italic text-[#D4AF37] leading-relaxed opacity-90 border-l-4 border-[#D4AF37] pl-8">
                 {getUIString(UI_DICT, rawLang, 'quote', '"The stars do not compel, they impel. This is your personal cosmic weather report."')}
               </p>
@@ -171,12 +211,13 @@ export default function ZodiacArticle() {
               </div>
             </article>
 
+            {/* SORU - CEVAP ALANI (Tüm soruları basar) */}
             <section className="mt-20 pt-20 border-t border-white/5">
               <div className="grid gap-6">
                 {faqData && Array.isArray(faqData) && faqData.map((faq: any, idx: number) => (
-                  <div key={idx} className="bg-white/5 p-10 rounded-[3rem] border border-white/5 hover:border-cyan-500/30 transition-all">
+                  <div key={idx} className="bg-white/5 p-10 rounded-[3rem] border border-white/5 hover:border-cyan-500/30 transition-all group">
                     <p className="text-cyan-400 font-black text-xs mb-4 uppercase tracking-widest">Q: {faq?.question}</p>
-                    <p className="text-white/40 text-sm leading-relaxed italic">A: {faq?.answer}</p>
+                    <p className="text-white/40 text-sm leading-relaxed italic group-hover:text-white/60 transition-colors">A: {faq?.answer}</p>
                   </div>
                 ))}
               </div>
