@@ -62,23 +62,24 @@ export default function GlobalCosmosPortal() {
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="bg-[#000] text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] flex flex-col overflow-hidden">
       
-      <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-[100] bg-black/80 backdrop-blur-md px-4 md:px-8 shrink-0">
-        <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3 group">
-            <img src="https://gemicha-portal.vercel.app/logo.png" alt="Gemicha" className="h-10 w-auto rounded-lg" />
-            <span className={`text-xl font-black text-white uppercase ${trackingWidest}`}>{safeUpper("Gemicha", lang)}</span>
+      {/* MENÜ ALANI - MOBİLDE SIKIŞTIRMA VE KÜÇÜLTME UYGULANDI */}
+      <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-[100] bg-black/80 backdrop-blur-md px-2 md:px-8 shrink-0 overflow-hidden">
+        <div className="max-w-7xl mx-auto w-full flex justify-between items-center gap-1 md:gap-2 flex-nowrap">
+          <Link href="/" className="flex items-center gap-1.5 md:gap-3 group shrink-0">
+            <img src="https://gemicha-portal.vercel.app/logo.png" alt="Gemicha" className="h-6 md:h-10 w-auto rounded-lg shrink-0" />
+            <span className={`text-[10px] sm:text-sm md:text-xl font-black text-white uppercase shrink-0 ${trackingWidest}`}>{safeUpper("Gemicha", lang)}</span>
           </Link>
-          <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center gap-6">
-                <Link href="/" className={`text-[10px] font-black text-white/50 hover:text-white transition uppercase ${trackingWidest}`}>
-                    <i className="fa-solid fa-house me-1.5"></i> {safeUpper(getUIString(UI_DICT, lang, 'home', 'HOME'), lang)}
+          <div className="flex items-center gap-2 md:gap-6 flex-nowrap shrink-0">
+            <div className="hidden md:flex items-center gap-2 md:gap-6 shrink-0">
+                <Link href="/" className={`text-[8px] sm:text-[10px] md:text-xs font-black text-white/50 hover:text-white transition uppercase whitespace-nowrap shrink-0 ${trackingWidest}`}>
+                    <i className="fa-solid fa-house me-1 md:me-1.5"></i> {safeUpper(getUIString(UI_DICT, lang, 'home', 'HOME'), lang)}
                 </Link>
-                <Link href="/characters" className={`text-[10px] font-black text-white/50 hover:text-white transition uppercase ${trackingWidest}`}>
-                    <i className="fa-solid fa-user-astronaut me-1.5"></i> {safeUpper(getUIString(UI_DICT, lang, 'char', 'CHARACTERS'), lang)}
+                <Link href="/characters" className={`text-[8px] sm:text-[10px] md:text-xs font-black text-white/50 hover:text-white transition uppercase whitespace-nowrap shrink-0 ${trackingWidest}`}>
+                    <i className="fa-solid fa-user-astronaut me-1 md:me-1.5"></i> {safeUpper(getUIString(UI_DICT, lang, 'char', 'CHARACTERS'), lang)}
                 </Link>
             </div>
-            <div className="h-4 w-[1px] bg-white/10 hidden md:block"></div>
-<select value={lang} onChange={(e) => handleLangChange(e.target.value)} className="bg-[#111] border border-white/20 rounded px-2 py-1 text-xs font-bold uppercase outline-none cursor-pointer">
+            <div className="h-4 w-[1px] bg-white/10 hidden md:block shrink-0"></div>
+<select value={lang} onChange={(e) => handleLangChange(e.target.value)} className="bg-[#111] border border-white/20 rounded px-1.5 md:px-2 py-1 text-[8px] sm:text-[10px] md:text-xs font-bold uppercase outline-none cursor-pointer w-auto whitespace-nowrap shrink-0">
   {Object.entries(LANG_NAMES).map(([code, fallbackName]) => {
      let displayLangName = fallbackName;
      try {
