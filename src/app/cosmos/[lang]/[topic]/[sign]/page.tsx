@@ -95,7 +95,6 @@ export default function ZodiacArticle() {
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black flex flex-col overflow-x-hidden">
       
-      {/* MENÜ ALANI - SIFIR KAYIPLA DARALTILDI */}
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-2 md:px-6 backdrop-blur-md shrink-0 overflow-hidden">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center gap-1 md:gap-2 flex-nowrap">
           <Link href="/" className="flex items-center gap-1.5 md:gap-3 group shrink-0">
@@ -103,7 +102,7 @@ export default function ZodiacArticle() {
             <span className={`text-[10px] sm:text-sm md:text-xl font-black text-white shrink-0 ${trackingWidest}`}>{safeUpper("GEMICHA", rawLang)}</span>
           </Link>
           <div className="flex items-center gap-2 md:gap-6 flex-nowrap shrink-0">
-             <div className="flex items-center gap-2 md:gap-6 shrink-0">
+             <div className="hidden md:flex items-center gap-2 md:gap-6 shrink-0">
                 <Link href="/" className={`text-[8px] sm:text-[10px] md:text-xs font-black text-white/50 hover:text-white transition whitespace-nowrap shrink-0 ${trackingWidest}`}>
                     <i className="fa-solid fa-house me-1 md:me-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'home', 'HOME'), rawLang)}
                 </Link>
