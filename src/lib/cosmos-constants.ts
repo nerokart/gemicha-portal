@@ -183,7 +183,7 @@ export const getUIString = (dict: any, lang: string, key: string, fallback: stri
   return dict[lang]?.[key] || dict['en']?.[key] || fallback;
 };
 
-// Akıllı Büyük Harf Fonksiyonu (İngilizcede I, Türkçede İ)
+// Akıllı Büyük Harf Fonksiyonu
 export const safeUpper = (text: string, lang: string) => {
     if (!text) return "";
     return text.toLocaleUpperCase(lang === 'tr' ? 'tr-TR' : 'en-US');
