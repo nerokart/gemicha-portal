@@ -25,6 +25,12 @@ export default function ZodiacArticle() {
   const dbTopic = getBaseIdFromLocalized(TOPICS_DICT, rawLang, rawTopic);
   const dbSign = getBaseIdFromLocalized(ZODIAC_DICT, rawLang, rawSign);
 
+  // SES DURDURMA VE TEMİZLEME MANTIĞI EKLENDİ
+  useEffect(() => {
+    window.speechSynthesis.cancel();
+    return () => { window.speechSynthesis.cancel(); };
+  }, [params.lang, params.topic, params.sign, rawDate]);
+
   useEffect(() => {
     const fetchData = async () => {
       let mainQuery = supabase.from('gemicha_insights').select('*').ilike('language', rawLang).ilike('topic', dbTopic).ilike('zodiac_sign', dbSign).order('target_date', { ascending: false }).limit(1);
@@ -92,7 +98,6 @@ export default function ZodiacArticle() {
                 <Link href="/" className="text-[10px] font-black tracking-widest text-white/50 hover:text-white transition uppercase">
                     <i className="fa-solid fa-house mr-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'home', 'HOME'), rawLang)}
                 </Link>
-                {/* KARAKTER BUTONU YERİNE COSMOS BUTONU EKLENDİ */}
                 <Link href="/cosmos" className="text-[10px] font-black tracking-widest text-white/50 hover:text-white transition uppercase">
                     <i className="fa-solid fa-meteor mr-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'cosmos', 'COSMOS'), rawLang)}
                 </Link>
@@ -112,8 +117,6 @@ export default function ZodiacArticle() {
               <span className="bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full tracking-[0.3em] mb-6 inline-block uppercase">
                 NEURAL {safeUpper(displayTopic, rawLang)}
               </span>
-              
-              {/* UZUN İSİMLERİN TAŞMASINI ENGELLEYEN BREAK-WORDS EKLENDİ */}
               <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter leading-[0.85] mb-4 uppercase break-words hyphens-auto w-full overflow-hidden">
                 {safeUpper(displaySign, rawLang)}
               </h1>
@@ -155,7 +158,6 @@ export default function ZodiacArticle() {
         <main className="flex-1 bg-black p-8 md:p-20 overflow-y-auto relative no-scrollbar">
           <div className="max-w-3xl mx-auto">
             <div className="mb-12 w-full">
-              {/* BAŞLIK TAŞMA KORUMASI */}
               <h2 className="text-3xl md:text-4xl font-bold mb-8 text-white/90 uppercase break-words w-full">{insight.meta_title}</h2>
               
               <div className="flex items-center gap-2 mb-10 p-2 bg-white/5 rounded-2xl border border-white/10 w-max shadow-2xl shadow-black">
