@@ -95,33 +95,34 @@ export default function ZodiacArticle() {
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black flex flex-col overflow-x-hidden">
       
-      <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-6 backdrop-blur-md shrink-0">
-        <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3 group">
-            <img src="https://gemicha-portal.vercel.app/logo.png" className="h-10 rounded-lg" alt="Gemicha Logo" />
-            <span className={`text-xl font-black text-white ${trackingWidest}`}>{safeUpper("GEMICHA", rawLang)}</span>
+      {/* MENÜ ALANI - SIFIR KAYIPLA DARALTILDI */}
+      <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-2 md:px-6 backdrop-blur-md shrink-0 overflow-hidden">
+        <div className="max-w-7xl mx-auto w-full flex justify-between items-center gap-1 md:gap-2 flex-nowrap">
+          <Link href="/" className="flex items-center gap-1.5 md:gap-3 group shrink-0">
+            <img src="https://gemicha-portal.vercel.app/logo.png" className="h-6 md:h-10 rounded-lg" alt="Gemicha Logo" />
+            <span className={`text-[10px] sm:text-sm md:text-xl font-black text-white shrink-0 ${trackingWidest}`}>{safeUpper("GEMICHA", rawLang)}</span>
           </Link>
-          <div className="flex items-center gap-6">
-             <div className="hidden md:flex items-center gap-6">
-                <Link href="/" className={`text-[10px] font-black text-white/50 hover:text-white transition ${trackingWidest}`}>
-                    <i className="fa-solid fa-house me-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'home', 'HOME'), rawLang)}
+          <div className="flex items-center gap-2 md:gap-6 flex-nowrap shrink-0">
+             <div className="flex items-center gap-2 md:gap-6 shrink-0">
+                <Link href="/" className={`text-[8px] sm:text-[10px] md:text-xs font-black text-white/50 hover:text-white transition whitespace-nowrap shrink-0 ${trackingWidest}`}>
+                    <i className="fa-solid fa-house me-1 md:me-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'home', 'HOME'), rawLang)}
                 </Link>
-                <Link href="/cosmos" className={`text-[10px] font-black text-white/50 hover:text-white transition ${trackingWidest}`}>
-                    <i className="fa-solid fa-meteor me-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'cosmos', 'COSMOS'), rawLang)}
+                <Link href="/cosmos" className={`text-[8px] sm:text-[10px] md:text-xs font-black text-white/50 hover:text-white transition whitespace-nowrap shrink-0 ${trackingWidest}`}>
+                    <i className="fa-solid fa-meteor me-1 md:me-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'cosmos', 'COSMOS'), rawLang)}
                 </Link>
              </div>
-             <div className="h-4 w-[1px] bg-white/10 hidden md:block"></div>
-<select value={rawLang} onChange={(e) => handleLangChange(e.target.value)} className="bg-[#111] border border-white/20 rounded px-2 py-1 text-xs font-bold uppercase outline-none cursor-pointer">
-  {Object.entries(LANG_NAMES).map(([code, fallbackName]) => {
-     let displayLangName = fallbackName;
-     try {
-         // Aktif dile göre (rawLang) dillerin adını anında çevirir!
-         const translated = new Intl.DisplayNames([rawLang], { type: 'language' }).of(code);
-         if (translated) displayLangName = translated;
-     } catch (e) {}
-     return <option key={code} value={code} className="bg-[#111]">{displayLangName}</option>
-  })}
-</select>
+             <div className="h-4 w-[1px] bg-white/10 hidden md:block shrink-0"></div>
+             <select value={rawLang} onChange={(e) => handleLangChange(e.target.value)} className="bg-[#111] border border-white/20 rounded px-1.5 md:px-2 py-1 text-[8px] sm:text-[10px] md:text-xs font-bold uppercase outline-none cursor-pointer w-auto whitespace-nowrap shrink-0">
+               {Object.entries(LANG_NAMES).map(([code, fallbackName]) => {
+                  let displayLangName = fallbackName;
+                  try {
+                      // Aktif dile göre (rawLang) dillerin adını anında çevirir!
+                      const translated = new Intl.DisplayNames([rawLang], { type: 'language' }).of(code);
+                      if (translated) displayLangName = translated;
+                  } catch (e) {}
+                  return <option key={code} value={code} className="bg-[#111]">{displayLangName}</option>
+               })}
+             </select>
           </div>
         </div>
       </nav>
