@@ -20,11 +20,17 @@ export default function GlobalCosmosPortal() {
   const rtlLangs = ['ar', 'he', 'fa', 'ur'];
   const isRTL = rtlLangs.includes(lang);
 
+  // ARAPÇA İÇİN TİPOGRAFİ KURTARICILARI (Bitişik dillerde boşluk/italik iptali)
+  const trackingWidest = isRTL ? 'tracking-normal' : 'tracking-widest';
+  const trackingWide = isRTL ? 'tracking-normal' : 'tracking-[0.4em]';
+  const trackingTight = isRTL ? 'tracking-normal' : 'tracking-tighter';
+  const fontItalic = isRTL ? 'not-italic' : 'italic';
+
   useEffect(() => {
     const savedLang = localStorage.getItem('gemicha_lang') || 'en';
     setLang(savedLang);
     document.documentElement.lang = savedLang;
-    document.documentElement.dir = rtlLangs.includes(savedLang) ? 'rtl' : 'ltr'; // HTML bazında yönü ayarla
+    document.documentElement.dir = rtlLangs.includes(savedLang) ? 'rtl' : 'ltr';
     
     const today = new Date().toISOString().split('T')[0];
     setTargetDate(today);
@@ -54,21 +60,20 @@ export default function GlobalCosmosPortal() {
   });
 
   return (
-    // dir özelliğini div'e veriyoruz ki anında render edilsin
     <div dir={isRTL ? 'rtl' : 'ltr'} className="bg-[#000] text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] flex flex-col overflow-hidden">
       
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-[100] bg-black/80 backdrop-blur-md px-4 md:px-8 shrink-0">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group">
             <img src="https://gemicha-portal.vercel.app/logo.png" alt="Gemicha" className="h-10 w-auto rounded-lg" />
-            <span className="text-xl font-black tracking-widest text-white">{safeUpper("Gemicha", lang)}</span>
+            <span className={`text-xl font-black text-white uppercase ${trackingWidest}`}>{safeUpper("Gemicha", lang)}</span>
           </Link>
           <div className="flex items-center gap-6">
             <div className="hidden md:flex items-center gap-6">
-                <Link href="/" className="text-[10px] font-black tracking-widest text-white/50 hover:text-white transition uppercase">
+                <Link href="/" className={`text-[10px] font-black text-white/50 hover:text-white transition uppercase ${trackingWidest}`}>
                     <i className="fa-solid fa-house me-1.5"></i> {safeUpper(getUIString(UI_DICT, lang, 'home', 'HOME'), lang)}
                 </Link>
-                <Link href="/characters" className="text-[10px] font-black tracking-widest text-white/50 hover:text-white transition uppercase">
+                <Link href="/characters" className={`text-[10px] font-black text-white/50 hover:text-white transition uppercase ${trackingWidest}`}>
                     <i className="fa-solid fa-user-astronaut me-1.5"></i> {safeUpper(getUIString(UI_DICT, lang, 'char', 'CHARACTERS'), lang)}
                 </Link>
             </div>
@@ -81,17 +86,16 @@ export default function GlobalCosmosPortal() {
       </nav>
 
       <div className="flex flex-1 overflow-hidden relative flex-col md:flex-row">
-        {/* Sol Menü - Arapçada Sağda Görünecek */}
         <aside className="w-full md:w-80 bg-[#020202] border-e border-white/5 flex flex-col shrink-0 z-40 overflow-y-auto no-scrollbar max-h-[40vh] md:max-h-full">
           <div className="p-6 space-y-8">
             <div>
-              <h3 className="text-[10px] font-black text-cyan-500 mb-3 tracking-widest flex items-center gap-2 uppercase">
-                <i className="fa-regular fa-calendar"></i> {getUIString(UI_DICT, lang, 'filter_title', 'Cosmic Date')}
+              <h3 className={`text-[10px] font-black text-cyan-500 mb-3 flex items-center gap-2 uppercase ${trackingWidest}`}>
+                <i className="fa-regular fa-calendar"></i> {safeUpper(getUIString(UI_DICT, lang, 'filter_title', 'Cosmic Date'), lang)}
               </h3>
               <input type="date" value={targetDate} onChange={(e) => { setTargetDate(e.target.value); fetchGlobalInsights(lang, e.target.value, sortOrder); }} onClick={(e) => (e.target as HTMLInputElement).showPicker?.()} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none cursor-pointer" />
             </div>
             <div>
-              <h3 className="text-[10px] font-black text-gray-500 mb-4 tracking-widest uppercase">
+              <h3 className={`text-[10px] font-black text-gray-500 mb-4 uppercase ${trackingWidest}`}>
                 {safeUpper(getUIString(UI_DICT, lang, 'zodiac_signs', 'Zodiac Signs'), lang)}
               </h3>
               <div className="grid grid-cols-4 md:grid-cols-3 gap-2">
@@ -106,7 +110,7 @@ export default function GlobalCosmosPortal() {
               </div>
             </div>
             <div>
-              <h3 className="text-[10px] font-black text-gray-500 mb-4 tracking-widest uppercase">
+              <h3 className={`text-[10px] font-black text-gray-500 mb-4 uppercase ${trackingWidest}`}>
                 {safeUpper(getUIString(UI_DICT, lang, 'topic_analytics', 'Topic Analytics'), lang)}
               </h3>
               <div className="space-y-2">
@@ -124,10 +128,10 @@ export default function GlobalCosmosPortal() {
         <main className="flex-1 bg-black overflow-y-auto no-scrollbar p-6 md:p-12 pb-32">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 gap-6">
               <header>
-                <span className="text-cyan-500 text-[10px] font-black tracking-[0.4em] mb-3 block uppercase">
+                <span className={`text-cyan-500 text-[10px] font-black mb-3 block uppercase ${trackingWide}`}>
                   {safeUpper(getUIString(UI_DICT, lang, 'insights_cosmos', 'Insights & Cosmos'), lang)}
                 </span>
-                <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter">
+                <h2 className={`text-4xl md:text-6xl font-black text-white ${fontItalic} ${trackingTight}`}>
                   {safeUpper(activeSign === 'all' ? getUIString(UI_DICT, lang, 'global', 'Global') : getUIString(ZODIAC_DICT, lang, activeSign, activeSign), lang)} 
                   <span className="text-white/20 ms-3">{safeUpper(getUIString(UI_DICT, lang, 'analysis', 'Analysis'), lang)}</span>
                 </h2>
@@ -171,7 +175,7 @@ export default function GlobalCosmosPortal() {
                     
                     <div className={`flex-1 flex flex-col justify-start ${viewMode === 'cols-2' ? 'p-8' : 'p-3 md:p-5'}`}>
                       <div className="flex justify-between items-center mb-3">
-                        <span className={`text-[#D4AF37] font-black tracking-widest uppercase ${viewMode === 'cols-2' ? 'text-[10px]' : 'text-[8px] md:text-[10px]'}`}>{safeUpper(getUIString(ZODIAC_DICT, lang, item.zodiac_sign.toLowerCase(), item.zodiac_sign), lang)}</span>
+                        <span className={`text-[#D4AF37] font-black uppercase ${trackingWidest} ${viewMode === 'cols-2' ? 'text-[10px]' : 'text-[8px] md:text-[10px]'}`}>{safeUpper(getUIString(ZODIAC_DICT, lang, item.zodiac_sign.toLowerCase(), item.zodiac_sign), lang)}</span>
                         <span className={`bg-white/5 px-2 py-1 md:px-3 rounded-full font-black text-white/40 uppercase ${viewMode === 'cols-2' ? 'text-[9px]' : 'text-[7px] md:text-[9px]'}`}>{safeUpper(getUIString(TOPICS_DICT, lang, item.topic.toLowerCase(), item.topic), lang)}</span>
                       </div>
                       
@@ -181,9 +185,8 @@ export default function GlobalCosmosPortal() {
                       
                       {viewMode === 'cols-2' && <p className="text-white/50 leading-relaxed font-medium text-sm line-clamp-3">{item.content_body}</p>}
                       
-                      <div className={`mt-auto pt-4 border-t border-white/5 inline-flex items-center gap-2 font-black uppercase tracking-widest text-cyan-400 group-hover:text-white transition-colors ${viewMode === 'cols-2' ? 'text-[9px]' : 'text-[7px] md:text-[9px]'}`}>
-                        {safeUpper(getUIString(UI_DICT, lang, 'read_report', 'Read Neural Report'))} 
-                        {/* Ok ikonu Arapçada sola, diğer dillerde sağa bakacak, hover animasyonları da tersine dönecek */}
+                      <div className={`mt-auto pt-4 border-t border-white/5 inline-flex items-center gap-2 font-black uppercase text-cyan-400 group-hover:text-white transition-colors ${trackingWidest} ${viewMode === 'cols-2' ? 'text-[9px]' : 'text-[7px] md:text-[9px]'}`}>
+                        {safeUpper(getUIString(UI_DICT, lang, 'read_report', 'Read Neural Report'), lang)} 
                         <i className="fa-solid fa-arrow-right rtl:rotate-180 group-hover:translate-x-2 rtl:group-hover:-translate-x-2 transition-transform"></i>
                       </div>
                     </div>
@@ -196,14 +199,14 @@ export default function GlobalCosmosPortal() {
       </div>
 
       <footer className="py-12 text-center border-t border-white/5 bg-black mt-auto shrink-0 z-50">
-          <div className="max-w-7xl mx-auto flex flex-col gap-6 px-6 text-[10px] tracking-[0.4em] text-slate-600 font-bold uppercase">
+          <div className={`max-w-7xl mx-auto flex flex-col gap-6 px-6 text-[10px] text-slate-600 font-bold uppercase ${trackingWide}`}>
               <nav className="flex justify-center flex-wrap gap-8">
                   <Link href="/" className="hover:text-white transition">{safeUpper(getUIString(UI_DICT, lang, 'home', 'Home'), lang)}</Link>
                   <Link href="/characters" className="hover:text-white transition">{safeUpper(getUIString(UI_DICT, lang, 'char', 'Characters'), lang)}</Link>
                   <Link href="/privacy" className="hover:text-white transition">{safeUpper(getUIString(UI_DICT, lang, 'priv', 'Privacy Policy'), lang)}</Link>
                   <Link href="/terms" className="hover:text-white transition">{safeUpper(getUIString(UI_DICT, lang, 'terms', 'Terms of Service'), lang)}</Link>
               </nav>
-              <p className="text-[9px] text-slate-800 tracking-[0.6em] pt-4 border-t border-white/5">© 2026 GEMICHA | ALL CELESTIAL RIGHTS RESERVED</p>
+              <p className={`text-[9px] text-slate-800 pt-4 border-t border-white/5 ${trackingWide}`}>© 2026 GEMICHA | ALL CELESTIAL RIGHTS RESERVED</p>
           </div>
       </footer>
       <style jsx global>{`.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
