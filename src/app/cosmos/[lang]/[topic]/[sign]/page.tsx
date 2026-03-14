@@ -17,15 +17,15 @@ export default function ZodiacArticle() {
   const [loading, setLoading] = useState(true);
   const [playingState, setPlayingState] = useState<'idle' | 'playing' | 'paused'>('idle');
 
-  const rawLang = decodeURIComponent((params.lang as string) || 'en').trim();
-  const rawTopic = decodeURIComponent((params.topic as string) || '').trim();
-  const rawSign = decodeURIComponent((params.sign as string) || '').trim();
-  const rawDate = searchParams.get('date');
+  // Params güvenli okuma (Optional Chaining)
+  const rawLang = decodeURIComponent((params?.lang as string) || 'en').trim();
+  const rawTopic = decodeURIComponent((params?.topic as string) || '').trim();
+  const rawSign = decodeURIComponent((params?.sign as string) || '').trim();
+  const rawDate = searchParams ? searchParams.get('date') : null;
 
   const dbTopic = getBaseIdFromLocalized(TOPICS_DICT, rawLang, rawTopic);
-  const dbSign = getBaseIdFromLocalized(ZODIAC_DICT, rawLang, dbSign);
+  const dbSign = getBaseIdFromLocalized(ZODIAC_DICT, rawLang, rawSign);
 
-  // RTL ve Tipografi Ayarları
   const rtlLangs = ['ar', 'he', 'fa', 'ur'];
   const isRTL = rtlLangs.includes(rawLang);
   const trackingWidest = isRTL ? 'tracking-normal' : 'tracking-widest';
@@ -33,43 +33,53 @@ export default function ZodiacArticle() {
   const trackingTight = isRTL ? 'tracking-normal' : 'tracking-tighter';
   const fontItalic = isRTL ? 'not-italic' : 'italic';
 
-  // SEO VE DİL AYARLARI GÜNCELLEMESİ
   useEffect(() => {
-    window.speechSynthesis.cancel();
-    document.documentElement.dir = rtlLangs.includes(rawLang) ? 'rtl' : 'ltr';
+    if (typeof window !== 'undefined') {
+      window.speechSynthesis?.cancel();
+      document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+    }
+    return () => { if (typeof window !== 'undefined') window.speechSynthesis?.cancel(); };
+  }, [params?.lang, params?.topic, params?.sign, rawDate, isRTL]);
 
+  useEffect(() => {
     if (insight) {
-      // CSV hatasını çözen dinamik Title (Başlık) güncellemesi
       const displaySignName = getUIString(ZODIAC_DICT, rawLang, dbSign, dbSign);
       const displayTopicName = getUIString(TOPICS_DICT, rawLang, dbTopic, dbTopic);
-      const fullTitle = `${safeUpper(displaySignName, rawLang)} ${safeUpper(displayTopicName, rawLang)} - ${insight.target_date} Daily Analysis | Gemicha`;
+      const fullTitle = `${safeUpper(displaySignName, rawLang)} ${safeUpper(displayTopicName, rawLang)} - ${insight?.target_date || ''} Daily Analysis | Gemicha`;
       document.title = fullTitle;
 
-      // CSV hatasını çözen dinamik Meta Description güncellemesi
       let metaDesc = document.querySelector('meta[name="description"]');
       if (!metaDesc) {
         metaDesc = document.createElement('meta');
         metaDesc.setAttribute('name', 'description');
         document.head.appendChild(metaDesc);
       }
-      // İçeriğin ilk 160 karakterini alarak açıklama yapar (SEO uyumlu uzunluk)
-      metaDesc.setAttribute("content", insight.content_body.substring(0, 160).replace(/\s+/g, ' ').trim() + "...");
+      const descText = insight?.content_body ? insight.content_body.substring(0, 160).replace(/\s+/g, ' ').trim() : "";
+      metaDesc.setAttribute("content", descText + "...");
     }
-
-    return () => { window.speechSynthesis.cancel(); };
-  }, [params.lang, params.topic, params.sign, rawDate, insight, rawLang, dbSign, dbTopic]);
+  }, [insight, rawLang, dbSign, dbTopic]);
 
   useEffect(() => {
     const fetchData = async () => {
-      let mainQuery = supabase.from('gemicha_insights').select('*').ilike('language', rawLang).ilike('topic', dbTopic).ilike('zodiac_sign', dbSign).order('target_date', { ascending: false }).limit(1);
-      if (rawDate) mainQuery = mainQuery.eq('target_date', rawDate);
-      const { data } = await mainQuery;
-      
-      if (data && data[0]) {
-         setInsight(data[0]);
-         try { setFaqData(typeof data[0].faq_schema === 'string' ? JSON.parse(data[0].faq_schema) : data[0].faq_schema); } catch(e) {}
+      try {
+        setLoading(true);
+        let mainQuery = supabase.from('gemicha_insights').select('*').ilike('language', rawLang).ilike('topic', dbTopic).ilike('zodiac_sign', dbSign).order('target_date', { ascending: false }).limit(1);
+        if (rawDate) mainQuery = mainQuery.eq('target_date', rawDate);
+        const { data, error } = await mainQuery;
+        
+        if (error) throw error;
+
+        if (data && data[0]) {
+           setInsight(data[0]);
+           try { 
+             setFaqData(typeof data[0].faq_schema === 'string' ? JSON.parse(data[0].faq_schema) : data[0].faq_schema); 
+           } catch(e) { setFaqData([]); }
+        }
+      } catch (err) {
+        console.error("Client-side fetch error:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchData();
   }, [rawLang, dbTopic, dbSign, rawDate]);
@@ -88,7 +98,7 @@ export default function ZodiacArticle() {
   };
 
   const toggleAudio = () => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !insight?.content_body) return;
     if (playingState === 'playing') { window.speechSynthesis.pause(); setPlayingState('paused'); return; }
     if (playingState === 'paused') { window.speechSynthesis.resume(); setPlayingState('playing'); return; }
     window.speechSynthesis.cancel();
@@ -98,7 +108,7 @@ export default function ZodiacArticle() {
     setPlayingState('playing');
     window.speechSynthesis.speak(utterance);
   };
-  const stopAudio = () => { window.speechSynthesis.cancel(); setPlayingState('idle'); };
+  const stopAudio = () => { if (typeof window !== 'undefined') window.speechSynthesis.cancel(); setPlayingState('idle'); };
 
   if (loading) return <div className="min-h-screen bg-black flex justify-center items-center"><div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div></div>;
 
@@ -163,7 +173,7 @@ export default function ZodiacArticle() {
            </div>
 
            <div className="mb-6">
-              <input type="date" value={insight.target_date} onChange={(e) => handleDateChange(e.target.value)} onClick={(e) => (e.target as HTMLInputElement).showPicker?.()} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:border-cyan-400 transition-all cursor-pointer" />
+              <input type="date" value={insight?.target_date || ""} onChange={(e) => handleDateChange(e.target.value)} onClick={(e) => (e.target as HTMLInputElement).showPicker?.()} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:border-cyan-400 transition-all cursor-pointer" />
            </div>
 
            <div className="space-y-2 mb-8 w-full">
@@ -194,7 +204,7 @@ export default function ZodiacArticle() {
           <div className="max-w-3xl mx-auto">
             <div className="mb-12 w-full">
               <h2 className="text-3xl md:text-4xl font-bold mb-8 text-white/90 break-words w-full">
-                {safeUpper(insight.meta_title, rawLang)}
+                {safeUpper(insight?.meta_title || "", rawLang)}
               </h2>
               
               <div className="flex items-center gap-2 mb-10 p-2 bg-white/5 rounded-2xl border border-white/10 w-max shadow-2xl shadow-black">
@@ -217,7 +227,7 @@ export default function ZodiacArticle() {
 
             <article className="prose prose-invert max-w-none">
               <div className="text-xl leading-[2.1] text-white/70 space-y-12 first-letter:text-8xl first-letter:font-black first-letter:text-[#D4AF37] first-letter:me-5 first-letter:float-start first-letter:mt-3 break-words">
-                {insight.content_body}
+                {insight?.content_body || ""}
               </div>
             </article>
 
@@ -226,10 +236,10 @@ export default function ZodiacArticle() {
                 {faqData && Array.isArray(faqData) && faqData.map((faq: any, idx: number) => (
                   <div key={idx} className="bg-white/5 p-10 rounded-[3rem] border border-white/5 hover:border-cyan-500/30 transition-all group">
                     <p className={`text-cyan-400 font-black text-xs mb-4 ${trackingWidest}`}>
-                      {safeUpper(`Q: ${faq?.question}`, rawLang)}
+                      {safeUpper(`Q: ${faq?.question || ""}`, rawLang)}
                     </p>
                     <p className={`text-white/40 text-sm leading-relaxed group-hover:text-white/60 transition-colors ${fontItalic}`}>
-                      A: {faq?.answer}
+                      A: {faq?.answer || ""}
                     </p>
                   </div>
                 ))}
