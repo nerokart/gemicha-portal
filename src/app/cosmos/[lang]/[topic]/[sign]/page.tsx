@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { LANG_NAMES, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getBaseIdFromLocalized, getUIString, safeUpper } from '@/lib/cosmos-constants';
+import { LANG_NAMES, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getBaseIdFromLocalized, getUIString, safeUpper } from '../../../../../lib/cosmos-constants';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
