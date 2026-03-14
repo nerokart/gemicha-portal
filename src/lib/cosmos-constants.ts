@@ -10,7 +10,6 @@ export const LANG_NAMES = {
     sl: "Slovenščina", et: "Eesti", lv: "Latviešu", lt: "Lietuvių", ca: "Català", 
     az: "Azərbaycanca", kk: "Қазақша" 
 };
-
 export const ZODIAC_SIGNS = [
   { id: 'koc' }, { id: 'boga' }, { id: 'ikizler' }, { id: 'yengec' },
   { id: 'aslan' }, { id: 'basak' }, { id: 'terazi' }, { id: 'akrep' },
