@@ -133,7 +133,8 @@ export default function ZodiacArticle() {
               <span className={`bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full mb-6 inline-block ${trackingWide}`}>
                 {safeUpper(`NEURAL ${displayTopic}`, rawLang)}
               </span>
-              <h1 className={`text-4xl md:text-6xl font-black leading-[0.85] mb-4 break-words hyphens-auto w-full overflow-hidden ${fontItalic} ${trackingTight}`}>
+              {/* BURADAKİ FONT KÜÇÜLTÜLDÜ: text-6xl -> text-5xl ve altı yapıldı ki isim yatayda sığsın! */}
+              <h1 className={`text-3xl md:text-4xl lg:text-5xl font-black leading-[0.85] mb-4 break-words w-full overflow-hidden ${fontItalic} ${trackingTight}`}>
                 {safeUpper(displaySign, rawLang)}
               </h1>
            </div>
