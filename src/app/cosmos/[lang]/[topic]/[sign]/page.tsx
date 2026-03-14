@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
+// İŞTE BURASI DÜZELTİLDİ: Artık @/ yerine ../../../../../ kullanıyoruz
 import { LANG_NAMES, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getBaseIdFromLocalized, getUIString, safeUpper } from '../../../../../lib/cosmos-constants';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -22,7 +23,6 @@ export default function ZodiacArticle() {
   const rawSign = decodeURIComponent((params.sign as string) || '').trim();
   const rawDate = searchParams.get('date');
 
-  // URL'deki kelimeleri (örn: karriere, skorpion) veritabanı ID'lerine çevir
   const dbTopic = getBaseIdFromLocalized(TOPICS_DICT, rawLang, rawTopic);
   const dbSign = getBaseIdFromLocalized(ZODIAC_DICT, rawLang, rawSign);
 
@@ -51,7 +51,6 @@ export default function ZodiacArticle() {
     fetchData();
   }, [rawLang, dbTopic, dbSign, rawDate]);
 
-  // Dil Değiştirici: Aynı burcun ve konunun yeni dildeki URL'sini bulup oraya gider
   const handleLangChange = (newLang: string) => {
     localStorage.setItem('gemicha_lang', newLang);
     const newTopicSlug = slugify(getUIString(TOPICS_DICT, newLang, dbTopic, dbTopic));
@@ -59,7 +58,6 @@ export default function ZodiacArticle() {
     router.push(`/cosmos/${newLang}/${newTopicSlug}/${newSignSlug}${rawDate ? `?date=${rawDate}` : ''}`);
   };
 
-  // BLOG TARZI SES MOTORU
   const toggleAudio = () => {
     if (typeof window === 'undefined') return;
     if (playingState === 'playing') { window.speechSynthesis.pause(); setPlayingState('paused'); return; }
@@ -92,14 +90,12 @@ export default function ZodiacArticle() {
     );
   }
 
-  // Ekranda Gösterilecek Kelimeler
   const displaySign = getUIString(ZODIAC_DICT, rawLang, dbSign, dbSign);
   const displayTopic = getUIString(TOPICS_DICT, rawLang, dbTopic, dbTopic);
 
   return (
     <div className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black flex flex-col overflow-x-hidden">
       
-      {/* SİTE STANDART NAV BAR */}
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-6 backdrop-blur-md shrink-0">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
           <Link href="/cosmos" className="flex items-center gap-3 group">
@@ -120,7 +116,6 @@ export default function ZodiacArticle() {
 
       <div className="flex flex-1 flex-col md:flex-row">
         
-        {/* SOL PANEL */}
         <aside className="w-full md:w-[450px] bg-[#020202] border-r border-white/5 p-8 md:p-12 flex flex-col shrink-0">
            <div className="mb-6">
               <span className="bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full tracking-[0.3em] mb-6 inline-block">
@@ -136,7 +131,6 @@ export default function ZodiacArticle() {
               <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-transparent to-transparent"></div>
            </div>
 
-           {/* Yasal Uyarı Köşesi */}
            <div className="mt-auto p-6 bg-red-500/5 border border-red-500/10 rounded-3xl">
               <p className="text-[9px] font-black text-red-400 tracking-widest mb-2 flex items-center gap-2 uppercase">
                 <i className="fa-solid fa-triangle-exclamation"></i> {getUIString(UI_DICT, rawLang, 'legal', 'Legal Disclaimer')}
@@ -147,14 +141,12 @@ export default function ZodiacArticle() {
            </div>
         </aside>
 
-        {/* MAKALE ALANI */}
         <main className="flex-1 bg-black p-8 md:p-20 overflow-y-auto relative no-scrollbar">
           <div className="max-w-3xl mx-auto">
             
             <div className="mb-12">
               <h2 className="text-3xl font-bold mb-8 text-white/90 uppercase">{insight.meta_title}</h2>
               
-              {/* Orijinal Blog Stili Müzik Çalar Kapsülü */}
               <div className="flex items-center gap-2 mb-10 p-2 bg-white/5 rounded-2xl border border-white/10 w-max shadow-2xl shadow-black">
                   <div className="px-3 border-r border-white/10">
                       <i className={`fa-solid ${playingState === 'playing' ? 'fa-waveform text-cyan-400 animate-pulse' : 'fa-volume-high text-slate-500'}`}></i>
@@ -168,7 +160,6 @@ export default function ZodiacArticle() {
                   </button>
               </div>
 
-              {/* DİLE GÖRE DİNAMİK ALINTI */}
               <p className="text-2xl md:text-3xl font-light italic text-[#D4AF37] leading-relaxed opacity-90 border-l-4 border-[#D4AF37] pl-8">
                 {getUIString(UI_DICT, rawLang, 'quote', '"The stars do not compel, they impel. This is your personal cosmic weather report."')}
               </p>
@@ -180,7 +171,6 @@ export default function ZodiacArticle() {
               </div>
             </article>
 
-            {/* Soru Cevap Alanı */}
             <section className="mt-20 pt-20 border-t border-white/5">
               <div className="grid gap-6">
                 {faqData && Array.isArray(faqData) && faqData.map((faq: any, idx: number) => (
