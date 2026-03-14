@@ -4,6 +4,11 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const baseUrl = 'https://www.gemicha.com';
 
+  // YARININ TARİHİNİ OTOMATİK HESAPLAMA (AI Motoru ile tam senkronize)
+  const dateObj = new Date();
+  dateObj.setDate(dateObj.getDate() + 1); // Bugüne +1 gün ekler
+  const targetDate = dateObj.toISOString().split('T')[0]; // Çıktı: "2026-03-15"
+
   // Dışarıya bağımlılığı kestik, 46 dilin tamamını buraya gömdük
   const langs = [
     "tr", "en", "ar", "de", "es", "fr", "it", "pt", "ru", "zh", "ja", "ko", 
@@ -22,7 +27,7 @@ export async function GET() {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
   // 1. Cosmos Ana Sayfası
-  xml += `  <url>\n    <loc>${baseUrl}/cosmos</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
+  xml += `  <url>\n    <loc>${baseUrl}/cosmos</loc>\n    <lastmod>${targetDate}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
 
   // 2. 46 Dil x 12 Burç x 4 Konu = Tam 2208 Alt Sayfa
   langs.forEach((lang) => {
@@ -30,6 +35,7 @@ export async function GET() {
       topics.forEach((topic) => {
         xml += `  <url>\n`;
         xml += `    <loc>${baseUrl}/cosmos/${lang}/${topic}/${sign}</loc>\n`;
+        xml += `    <lastmod>${targetDate}</lastmod>\n`; // HER GÜN OTOMATİK GÜNCELLENEN TARİH ETİKETİ
         xml += `    <changefreq>daily</changefreq>\n`;
         xml += `    <priority>0.8</priority>\n`;
         xml += `  </url>\n`;
@@ -42,7 +48,8 @@ export async function GET() {
   return new Response(xml, {
     headers: {
       'Content-Type': 'text/xml',
-      'Cache-Control': 's-maxage=86400, stale-while-revalidate', // Sunucuyu yormadan 1 gün önbellekte tutar
+      // Önbellekte 1 tam gün yerine 1 saat tutuyoruz (Gece 00:00'ı geçer geçmez sitemap'in tarihleri yenilensin diye)
+      'Cache-Control': 's-maxage=3600, stale-while-revalidate', 
     },
   });
 }
