@@ -27,7 +27,6 @@ const ZODIAC_SIGNS = [
   { id: 'yay' }, { id: 'oglak' }, { id: 'kova' }, { id: 'balik' }
 ];
 
-// EKSİKSİZ 46 DİL ZODYAK SÖZLÜĞÜ
 const ZODIAC_DICT: Record<string, Record<string, string>> = {
   tr: { koc: 'Koç', boga: 'Boğa', ikizler: 'İkizler', yengec: 'Yengeç', aslan: 'Aslan', basak: 'Başak', terazi: 'Terazi', akrep: 'Akrep', yay: 'Yay', oglak: 'Oğlak', kova: 'Kova', balik: 'Balık' },
   en: { koc: 'Aries', boga: 'Taurus', ikizler: 'Gemini', yengec: 'Cancer', aslan: 'Leo', basak: 'Virgo', terazi: 'Libra', akrep: 'Scorpio', yay: 'Sagittarius', oglak: 'Capricorn', kova: 'Aquarius', balik: 'Pisces' },
@@ -77,7 +76,6 @@ const ZODIAC_DICT: Record<string, Record<string, string>> = {
   kk: { koc: 'Тоқты', boga: 'Торпақ', ikizler: 'Егіздер', yengec: 'Шаян', aslan: 'Арыстан', basak: 'Бикеш', terazi: 'Таразы', akrep: 'Сарышаян', yay: 'Мерген', oglak: 'Тауешкі', kova: 'Суқұйғыш', balik: 'Балықтар' }
 };
 
-// EKSİKSİZ 46 DİL KONU (TOPIC) SÖZLÜĞÜ
 const TOPICS_DICT: Record<string, Record<string, string>> = {
   tr: { all: 'TÜMÜ', ask: 'AŞK', kariyer: 'KARİYER', saglik: 'SAĞLIK', para: 'PARA' },
   en: { all: 'ALL', ask: 'LOVE', kariyer: 'CAREER', saglik: 'HEALTH', para: 'FINANCE' },
@@ -127,6 +125,14 @@ const TOPICS_DICT: Record<string, Record<string, string>> = {
   kk: { all: 'БАРЛЫҒЫ', ask: 'МАХАББАТ', kariyer: 'МАНСАП', saglik: 'ДЕНСАУЛЫҚ', para: 'ҚАРЖЫ' }
 };
 
+const UI_DICT: Record<string, any> = {
+  tr: { home: "Ana Sayfa", char: "Karakterler", priv: "Gizlilik Politikası", terms: "Hizmet Şartları", support: "RESMİ DESTEK" },
+  en: { home: "Home", char: "Characters", priv: "Privacy Policy", terms: "Terms of Service", support: "OFFICIAL SUPPORT" },
+  fr: { home: "Accueil", char: "Personnages", priv: "Politique de Confidentialité", terms: "Conditions", support: "SUPPORT OFFICIEL" },
+  de: { home: "Startseite", char: "Charaktere", priv: "Datenschutz", terms: "Nutzungsbedingungen", support: "OFFIZIELLER SUPPORT" },
+  es: { home: "Inicio", char: "Personajes", priv: "Política de Privacidad", terms: "Términos", support: "SOPORTE OFICIAL" }
+};
+
 const getUIString = (dict: any, lang: string, key: string, fallback: string) => {
   return dict[lang]?.[key] || dict['en']?.[key] || fallback;
 };
@@ -148,7 +154,6 @@ export default function GlobalCosmosPortal() {
     const savedLang = localStorage.getItem('gemicha_lang') || 'en';
     setLang(savedLang);
     document.documentElement.lang = savedLang;
-    
     const today = new Date().toISOString().split('T')[0];
     setTargetDate(today);
     fetchGlobalInsights(savedLang, today);
@@ -156,14 +161,8 @@ export default function GlobalCosmosPortal() {
 
   const fetchGlobalInsights = async (selectedLang: string, date: string) => {
     setLoading(true);
-    let query = supabase
-      .from('gemicha_insights')
-      .select('*')
-      .eq('language', selectedLang)
-      .order('created_at', { ascending: false });
-
+    let query = supabase.from('gemicha_insights').select('*').eq('language', selectedLang).order('created_at', { ascending: false });
     if (date) query = query.eq('target_date', date);
-
     const { data } = await query;
     if (data) setInsights(data);
     setLoading(false);
@@ -208,22 +207,16 @@ export default function GlobalCosmosPortal() {
       
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-[100] bg-black/80 backdrop-blur-md px-4 md:px-8 shrink-0">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
-          <a href="/" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-3 group">
             <img src="https://gemicha-portal.vercel.app/logo.png" alt="Gemicha" className="h-10 w-auto rounded-lg" />
             <span className="text-xl font-black tracking-widest uppercase text-white">GEMICHA</span>
-          </a>
+          </Link>
           
           <div className="flex items-center gap-6">
-            <a href="/characters" className="text-[10px] font-black uppercase text-white/50 hover:text-white hidden md:block transition">CHARACTERS</a>
+            <Link href="/characters" className="text-[10px] font-black uppercase text-white/50 hover:text-white hidden md:block transition">{getUIString(UI_DICT, lang, 'char', 'CHARACTERS')}</Link>
             <div className="h-4 w-[1px] bg-white/10 hidden md:block"></div>
-            <select 
-              value={lang} 
-              onChange={(e) => changeLanguage(e.target.value)}
-              className="bg-[#111] border border-white/20 rounded px-2 py-1 text-xs font-bold uppercase outline-none cursor-pointer"
-            >
-              {Object.entries(LANG_NAMES).map(([code, name]) => (
-                <option key={code} value={code} className="bg-[#111]">{name}</option>
-              ))}
+            <select value={lang} onChange={(e) => changeLanguage(e.target.value)} className="bg-[#111] border border-white/20 rounded px-2 py-1 text-xs font-bold uppercase outline-none cursor-pointer">
+              {Object.entries(LANG_NAMES).map(([code, name]) => <option key={code} value={code} className="bg-[#111]">{name}</option>)}
             </select>
           </div>
         </div>
@@ -233,6 +226,7 @@ export default function GlobalCosmosPortal() {
         <aside className="w-full md:w-80 bg-[#020202] border-r border-white/5 flex flex-col shrink-0 z-40 overflow-y-auto no-scrollbar max-h-[40vh] md:max-h-full">
           <div className="p-6 space-y-8">
             
+            {/* GELİŞMİŞ TAKVİM - TIKLAYINCA AÇILIR */}
             <div>
               <h3 className="text-[10px] font-black text-cyan-500 mb-3 uppercase tracking-widest flex items-center gap-2">
                 <i className="fa-regular fa-calendar"></i> Cosmic Date
@@ -241,12 +235,10 @@ export default function GlobalCosmosPortal() {
                 type="date" 
                 value={targetDate} 
                 onChange={handleDateChange}
+                onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:border-cyan-400 transition-all cursor-pointer"
               />
-              <button 
-                onClick={() => { setTargetDate(''); fetchGlobalInsights(lang, ''); }}
-                className="mt-2 text-[9px] text-white/40 hover:text-white uppercase font-bold tracking-widest"
-              >
+              <button onClick={() => { setTargetDate(''); fetchGlobalInsights(lang, ''); }} className="mt-2 text-[9px] text-white/40 hover:text-white uppercase font-bold tracking-widest">
                 Clear Date Filter
               </button>
             </div>
@@ -254,16 +246,11 @@ export default function GlobalCosmosPortal() {
             <div>
               <h3 className="text-[10px] font-black text-gray-500 mb-4 uppercase tracking-widest">Zodiac Signs</h3>
               <div className="grid grid-cols-4 md:grid-cols-3 gap-2">
-                <button 
-                  onClick={() => setActiveSign('all')}
-                  className={`p-2 rounded-xl text-[9px] font-black border transition-all ${activeSign === 'all' ? 'bg-white text-black border-white' : 'bg-white/5 border-transparent text-gray-500'}`}
-                >
+                <button onClick={() => setActiveSign('all')} className={`p-2 rounded-xl text-[9px] font-black border transition-all ${activeSign === 'all' ? 'bg-white text-black border-white' : 'bg-white/5 border-transparent text-gray-500'}`}>
                   {getUIString(TOPICS_DICT, lang, 'all', 'ALL')}
                 </button>
                 {ZODIAC_SIGNS.map(s => (
-                  <button key={s.id} onClick={() => setActiveSign(s.id)}
-                    className={`p-2 rounded-xl text-[9px] font-black border transition-all uppercase ${activeSign === s.id ? 'bg-[#D4AF37] text-black border-[#D4AF37]' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}
-                  >
+                  <button key={s.id} onClick={() => setActiveSign(s.id)} className={`p-2 rounded-xl text-[9px] font-black border transition-all uppercase ${activeSign === s.id ? 'bg-[#D4AF37] text-black border-[#D4AF37]' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>
                     {getUIString(ZODIAC_DICT, lang, s.id, s.id)}
                   </button>
                 ))}
@@ -274,9 +261,7 @@ export default function GlobalCosmosPortal() {
               <h3 className="text-[10px] font-black text-gray-500 mb-4 uppercase tracking-widest">Topic Analytics</h3>
               <div className="space-y-2">
                 {['ask', 'kariyer', 'saglik', 'para'].map(t => (
-                  <button key={t} onClick={() => setActiveTopic(t)}
-                    className={`w-full text-left p-3 rounded-xl text-[10px] font-black border transition-all uppercase flex justify-between items-center ${activeTopic === t ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}
-                  >
+                  <button key={t} onClick={() => setActiveTopic(t)} className={`w-full text-left p-3 rounded-xl text-[10px] font-black border transition-all uppercase flex justify-between items-center ${activeTopic === t ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>
                     {getUIString(TOPICS_DICT, lang, t, t)}
                     {activeTopic === t && <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_10px_cyan]"></div>}
                   </button>
@@ -307,23 +292,12 @@ export default function GlobalCosmosPortal() {
                 const localSign = getLocalizedSlug(ZODIAC_DICT, lang, item.zodiac_sign.toLowerCase());
 
                 return (
-                  <Link 
-                    href={`/cosmos/${lang}/${localTopic}/${localSign}`} 
-                    key={item.id} 
-                    className="group relative bg-[#050505] border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-[#D4AF37]/50 transition-all duration-500 flex flex-col hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#D4AF37]/10"
-                  >
+                  <Link href={`/cosmos/${lang}/${localTopic}/${localSign}${targetDate ? `?date=${targetDate}` : ''}`} key={item.id} className="group relative bg-[#050505] border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-[#D4AF37]/50 transition-all duration-500 flex flex-col hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#D4AF37]/10">
                     <div className="aspect-video relative overflow-hidden">
-                      <img 
-                        src={`https://gemicha-portal.vercel.app/images/zodiac/${item.zodiac_sign.toLowerCase()}.webp`} 
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105 opacity-50" 
-                        alt={item.zodiac_sign}
-                      />
+                      <img src={`https://gemicha-portal.vercel.app/images/zodiac/${item.zodiac_sign.toLowerCase()}.webp`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105 opacity-50" alt={item.zodiac_sign} />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent"></div>
                       
-                      <button 
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSpeech(item.content_body, item.id); }}
-                        className={`absolute top-6 right-6 p-4 rounded-2xl border backdrop-blur-md transition-all z-20 ${playingId === item.id ? 'bg-cyan-500 border-cyan-400 text-black' : 'bg-white/5 border-white/10 text-white hover:bg-white/20 hover:scale-110'}`}
-                      >
+                      <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSpeech(item.content_body, item.id); }} className={`absolute top-6 right-6 p-4 rounded-2xl border backdrop-blur-md transition-all z-20 ${playingId === item.id ? 'bg-cyan-500 border-cyan-400 text-black' : 'bg-white/5 border-white/10 text-white hover:bg-white/20 hover:scale-110'}`}>
                         <i className={`fa-solid ${playingId === item.id ? 'fa-stop' : 'fa-play'}`}></i>
                       </button>
                     </div>
@@ -348,20 +322,21 @@ export default function GlobalCosmosPortal() {
         </main>
       </div>
 
+      {/* STANDART GEMICHA FOOTER */}
       <footer className="py-12 text-center border-t border-white/5 bg-black mt-auto shrink-0 z-50">
           <div className="max-w-7xl mx-auto flex flex-col gap-8 px-6 text-[10px] uppercase tracking-[0.4em] text-slate-600 font-bold">
               <nav className="flex justify-center flex-wrap gap-8">
-                  <a href="/" className="hover:text-white transition">Home</a>
-                  <a href="/characters" className="hover:text-white transition">Characters</a>
-                  <a href="/privacy" className="hover:text-white transition text-white border-b border-white/20 pb-1">Privacy Policy</a>
-                  <a href="/terms" className="hover:text-white transition">Terms of Service</a>
+                  <Link href="/" className="hover:text-white transition">{getUIString(UI_DICT, lang, 'home', 'Home')}</Link>
+                  <Link href="/characters" className="hover:text-white transition">{getUIString(UI_DICT, lang, 'char', 'Characters')}</Link>
+                  <Link href="/privacy" className="hover:text-white transition">{getUIString(UI_DICT, lang, 'priv', 'Privacy Policy')}</Link>
+                  <Link href="/terms" className="hover:text-white transition">{getUIString(UI_DICT, lang, 'terms', 'Terms of Service')}</Link>
               </nav>
-              <p className="text-slate-700 tracking-[0.3em] uppercase">Official Support</p>
+              <p className="text-slate-700 tracking-[0.3em] uppercase">{getUIString(UI_DICT, lang, 'support', 'OFFICIAL SUPPORT')}</p>
               <a href="mailto:support@gemicha.com" className="text-sm text-white/80 hover:text-cyan-400 transition lowercase tracking-normal font-medium">support@gemicha.com</a>
               
               <div className="mt-4 border-t border-white/5 pt-8 flex flex-col items-center">
                 <p className="text-[10px] font-black tracking-[0.5em] text-[#D4AF37] uppercase mb-2">GEMICHA NEURAL ENGINE v3.0</p>
-                <p className="text-[9px] text-slate-800 tracking-[0.6em] uppercase">© 2026 GEMICHA | ALL CELESTIAL RIGHTS RESERVED</p>
+                <p className="text-[9px] text-slate-800 tracking-[0.6em] uppercase">© 2026 GEMICHA</p>
               </div>
           </div>
       </footer>
