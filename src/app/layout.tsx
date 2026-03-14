@@ -26,6 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* İKONLAR İÇİN FONT AWESOME EKLENTİSİ (Play, Pause, Hoparlör vb.) */}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+      </head>
       <body
         className={`${plusJakartaSans.variable} font-sans antialiased bg-black text-white`}
       >
