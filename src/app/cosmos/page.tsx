@@ -47,7 +47,6 @@ export default function GlobalCosmosPortal() {
   return (
     <div className="bg-[#000] text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] flex flex-col overflow-hidden">
       
-      {/* NAVBAR (Ev / Karakter ikonları Dil Barının yanına eklendi) */}
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-[100] bg-black/80 backdrop-blur-md px-4 md:px-8 shrink-0">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group">
@@ -81,7 +80,9 @@ export default function GlobalCosmosPortal() {
               <input type="date" value={targetDate} onChange={(e) => { setTargetDate(e.target.value); fetchGlobalInsights(lang, e.target.value, sortOrder); }} onClick={(e) => (e.target as HTMLInputElement).showPicker?.()} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none cursor-pointer" />
             </div>
             <div>
-              <h3 className="text-[10px] font-black text-gray-500 mb-4 tracking-widest uppercase">Zodiac Signs</h3>
+              <h3 className="text-[10px] font-black text-gray-500 mb-4 tracking-widest uppercase">
+                {safeUpper(getUIString(UI_DICT, lang, 'zodiac_signs', 'Zodiac Signs'), lang)}
+              </h3>
               <div className="grid grid-cols-4 md:grid-cols-3 gap-2">
                 <button onClick={() => setActiveSign('all')} className={`p-2 rounded-xl text-[9px] font-black border transition-all ${activeSign === 'all' ? 'bg-white text-black border-white' : 'bg-white/5 border-transparent text-gray-500'}`}>
                   {safeUpper(getUIString(TOPICS_DICT, lang, 'all', 'ALL'), lang)}
@@ -94,7 +95,9 @@ export default function GlobalCosmosPortal() {
               </div>
             </div>
             <div>
-              <h3 className="text-[10px] font-black text-gray-500 mb-4 tracking-widest uppercase">Topic Analytics</h3>
+              <h3 className="text-[10px] font-black text-gray-500 mb-4 tracking-widest uppercase">
+                {safeUpper(getUIString(UI_DICT, lang, 'topic_analytics', 'Topic Analytics'), lang)}
+              </h3>
               <div className="space-y-2">
                 {['ask', 'kariyer', 'saglik', 'para'].map(t => (
                   <button key={t} onClick={() => setActiveTopic(t)} className={`w-full text-left p-3 rounded-xl text-[10px] font-black border transition-all flex justify-between items-center uppercase ${activeTopic === t ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>
@@ -110,9 +113,12 @@ export default function GlobalCosmosPortal() {
         <main className="flex-1 bg-black overflow-y-auto no-scrollbar p-6 md:p-12 pb-32">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-12 gap-6">
               <header>
-                <span className="text-cyan-500 text-[10px] font-black tracking-[0.4em] mb-3 block uppercase">Insights & Cosmos</span>
+                <span className="text-cyan-500 text-[10px] font-black tracking-[0.4em] mb-3 block uppercase">
+                  {safeUpper(getUIString(UI_DICT, lang, 'insights_cosmos', 'Insights & Cosmos'), lang)}
+                </span>
                 <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase">
-                  {safeUpper(activeSign === 'all' ? 'Global' : getUIString(ZODIAC_DICT, lang, activeSign, activeSign), lang)} <span className="text-white/20">Analysis</span>
+                  {safeUpper(activeSign === 'all' ? getUIString(UI_DICT, lang, 'global', 'Global') : getUIString(ZODIAC_DICT, lang, activeSign, activeSign), lang)} 
+                  <span className="text-white/20 ml-3">{safeUpper(getUIString(UI_DICT, lang, 'analysis', 'Analysis'), lang)}</span>
                 </h2>
               </header>
 
@@ -138,32 +144,35 @@ export default function GlobalCosmosPortal() {
           {loading ? (
              <div className="flex flex-col items-center justify-center py-20 gap-4"><div className="w-10 h-10 border-2 border-cyan-400/20 border-t-cyan-400 rounded-full animate-spin"></div></div>
           ) : (
-            <div className={`grid w-full transition-all duration-500 ${viewMode === 'cols-2' ? "grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"}`}>
+            // MOBİLDE 2'Lİ IZGARA (cols-4 modundayken grid-cols-2 çalışır)
+            <div className={`grid w-full transition-all duration-500 ${viewMode === 'cols-2' ? "grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4"}`}>
               {filteredInsights.map((item) => {
                 const cleanTopic = slugify(getUIString(TOPICS_DICT, lang, item.topic.toLowerCase(), item.topic));
                 const cleanSign = slugify(getUIString(ZODIAC_DICT, lang, item.zodiac_sign.toLowerCase(), item.zodiac_sign));
 
                 return (
                   <Link href={`/cosmos/${lang}/${cleanTopic}/${cleanSign}${targetDate ? `?date=${targetDate}` : ''}`} key={item.id} 
-                    className="group relative bg-[#050505] border border-white/5 rounded-[2rem] overflow-hidden hover:border-[#D4AF37]/50 transition-all duration-500 flex flex-col hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#D4AF37]/10"
+                    className={`group relative bg-[#050505] border border-white/5 overflow-hidden hover:border-[#D4AF37]/50 transition-all duration-500 flex flex-col hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#D4AF37]/10 ${viewMode === 'cols-2' ? 'rounded-[2rem]' : 'rounded-2xl md:rounded-[2rem]'}`}
                   >
                     <div className="relative overflow-hidden aspect-video w-full shrink-0">
                       <img src={`https://gemicha-portal.vercel.app/images/zodiac/${item.zodiac_sign.toLowerCase()}.webp`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105 opacity-60" />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent"></div>
                     </div>
-                    <div className={`flex-1 flex flex-col justify-start ${viewMode === 'cols-2' ? 'p-8' : 'p-5'}`}>
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-[#D4AF37] font-black text-[10px] tracking-widest uppercase">{safeUpper(getUIString(ZODIAC_DICT, lang, item.zodiac_sign.toLowerCase(), item.zodiac_sign), lang)}</span>
-                        <span className="bg-white/5 px-3 py-1 rounded-full text-[9px] font-black text-white/40 uppercase">{safeUpper(getUIString(TOPICS_DICT, lang, item.topic.toLowerCase(), item.topic), lang)}</span>
+                    
+                    <div className={`flex-1 flex flex-col justify-start ${viewMode === 'cols-2' ? 'p-8' : 'p-3 md:p-5'}`}>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className={`text-[#D4AF37] font-black tracking-widest uppercase ${viewMode === 'cols-2' ? 'text-[10px]' : 'text-[8px] md:text-[10px]'}`}>{safeUpper(getUIString(ZODIAC_DICT, lang, item.zodiac_sign.toLowerCase(), item.zodiac_sign), lang)}</span>
+                        <span className={`bg-white/5 px-2 py-1 md:px-3 rounded-full font-black text-white/40 uppercase ${viewMode === 'cols-2' ? 'text-[9px]' : 'text-[7px] md:text-[9px]'}`}>{safeUpper(getUIString(TOPICS_DICT, lang, item.topic.toLowerCase(), item.topic), lang)}</span>
                       </div>
-                      <h3 className={`font-bold leading-tight group-hover:text-[#D4AF37] transition-colors uppercase ${viewMode === 'cols-2' ? 'text-2xl mb-4' : 'text-lg mb-2'}`}>
+                      
+                      <h3 className={`font-bold leading-tight group-hover:text-[#D4AF37] transition-colors uppercase ${viewMode === 'cols-2' ? 'text-2xl mb-4' : 'text-sm md:text-lg mb-2'} break-words`}>
                         {safeUpper(item.meta_title, lang)}
                       </h3>
-                      <p className={`text-white/50 leading-relaxed font-medium ${viewMode === 'cols-2' ? 'text-sm line-clamp-3' : 'text-xs line-clamp-2'}`}>
-                        {item.content_body}
-                      </p>
-                      <div className="mt-6 pt-4 border-t border-white/5 inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-cyan-400 group-hover:text-white transition-colors">
-                        Read Neural Report <i className="fa-solid fa-arrow-right group-hover:translate-x-2 transition-transform"></i>
+                      
+                      {viewMode === 'cols-2' && <p className="text-white/50 leading-relaxed font-medium text-sm line-clamp-3">{item.content_body}</p>}
+                      
+                      <div className={`mt-auto pt-4 border-t border-white/5 inline-flex items-center gap-2 font-black uppercase tracking-widest text-cyan-400 group-hover:text-white transition-colors ${viewMode === 'cols-2' ? 'text-[9px]' : 'text-[7px] md:text-[9px]'}`}>
+                        {safeUpper(getUIString(UI_DICT, lang, 'read_report', 'Read Neural Report'), lang)} <i className="fa-solid fa-arrow-right group-hover:translate-x-2 transition-transform"></i>
                       </div>
                     </div>
                   </Link>
@@ -174,7 +183,6 @@ export default function GlobalCosmosPortal() {
         </main>
       </div>
 
-      {/* FOOTER (4'LÜ MENÜ EKLENDİ) */}
       <footer className="py-12 text-center border-t border-white/5 bg-black mt-auto shrink-0 z-50">
           <div className="max-w-7xl mx-auto flex flex-col gap-6 px-6 text-[10px] tracking-[0.4em] text-slate-600 font-bold uppercase">
               <nav className="flex justify-center flex-wrap gap-8">
