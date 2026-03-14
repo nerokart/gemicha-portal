@@ -25,9 +25,17 @@ export default function ZodiacArticle() {
   const dbTopic = getBaseIdFromLocalized(TOPICS_DICT, rawLang, rawTopic);
   const dbSign = getBaseIdFromLocalized(ZODIAC_DICT, rawLang, rawSign);
 
-  // SES DURDURMA VE TEMİZLEME MANTIĞI EKLENDİ
+  // RTL ve Tipografi Ayarları
+  const rtlLangs = ['ar', 'he', 'fa', 'ur'];
+  const isRTL = rtlLangs.includes(rawLang);
+  const trackingWidest = isRTL ? 'tracking-normal' : 'tracking-widest';
+  const trackingWide = isRTL ? 'tracking-normal' : 'tracking-[0.4em]';
+  const trackingTight = isRTL ? 'tracking-normal' : 'tracking-tighter';
+  const fontItalic = isRTL ? 'not-italic' : 'italic';
+
   useEffect(() => {
     window.speechSynthesis.cancel();
+    document.documentElement.dir = rtlLangs.includes(rawLang) ? 'rtl' : 'ltr';
     return () => { window.speechSynthesis.cancel(); };
   }, [params.lang, params.topic, params.sign, rawDate]);
 
@@ -85,21 +93,21 @@ export default function ZodiacArticle() {
   const displayTopic = getUIString(TOPICS_DICT, rawLang, dbTopic, dbTopic);
 
   return (
-    <div className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black flex flex-col overflow-x-hidden">
+    <div dir={isRTL ? 'rtl' : 'ltr'} className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black flex flex-col overflow-x-hidden">
       
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-6 backdrop-blur-md shrink-0">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3 group">
             <img src="https://gemicha-portal.vercel.app/logo.png" className="h-10 rounded-lg" alt="Gemicha Logo" />
-            <span className="text-xl font-black tracking-widest text-white">{safeUpper("GEMICHA", rawLang)}</span>
+            <span className={`text-xl font-black text-white ${trackingWidest}`}>{safeUpper("GEMICHA", rawLang)}</span>
           </Link>
           <div className="flex items-center gap-6">
              <div className="hidden md:flex items-center gap-6">
-                <Link href="/" className="text-[10px] font-black tracking-widest text-white/50 hover:text-white transition uppercase">
-                    <i className="fa-solid fa-house mr-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'home', 'HOME'), rawLang)}
+                <Link href="/" className={`text-[10px] font-black text-white/50 hover:text-white transition ${trackingWidest}`}>
+                    <i className="fa-solid fa-house me-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'home', 'HOME'), rawLang)}
                 </Link>
-                <Link href="/cosmos" className="text-[10px] font-black tracking-widest text-white/50 hover:text-white transition uppercase">
-                    <i className="fa-solid fa-meteor mr-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'cosmos', 'COSMOS'), rawLang)}
+                <Link href="/cosmos" className={`text-[10px] font-black text-white/50 hover:text-white transition ${trackingWidest}`}>
+                    <i className="fa-solid fa-meteor me-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'cosmos', 'COSMOS'), rawLang)}
                 </Link>
              </div>
              <div className="h-4 w-[1px] bg-white/10 hidden md:block"></div>
@@ -112,12 +120,12 @@ export default function ZodiacArticle() {
 
       <div className="flex flex-1 flex-col md:flex-row">
         
-        <aside className="w-full md:w-[450px] bg-[#020202] border-r border-white/5 p-8 md:p-12 flex flex-col shrink-0 overflow-hidden">
+        <aside className="w-full md:w-[450px] bg-[#020202] border-e border-white/5 p-8 md:p-12 flex flex-col shrink-0 overflow-hidden">
            <div className="mb-6 w-full">
-              <span className="bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full tracking-[0.3em] mb-6 inline-block uppercase">
-                NEURAL {safeUpper(displayTopic, rawLang)}
+              <span className={`bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full mb-6 inline-block ${trackingWide}`}>
+                {safeUpper(`NEURAL ${displayTopic}`, rawLang)}
               </span>
-              <h1 className="text-4xl md:text-6xl font-black italic tracking-tighter leading-[0.85] mb-4 uppercase break-words hyphens-auto w-full overflow-hidden">
+              <h1 className={`text-4xl md:text-6xl font-black leading-[0.85] mb-4 break-words hyphens-auto w-full overflow-hidden ${fontItalic} ${trackingTight}`}>
                 {safeUpper(displaySign, rawLang)}
               </h1>
            </div>
@@ -137,7 +145,7 @@ export default function ZodiacArticle() {
                  const tSlug = slugify(getUIString(TOPICS_DICT, rawLang, t, t));
                  const sSlug = slugify(getUIString(ZODIAC_DICT, rawLang, dbSign, dbSign));
                  return (
-                   <Link key={t} href={`/cosmos/${rawLang}/${tSlug}/${sSlug}${rawDate ? `?date=${rawDate}` : ''}`} className={`w-full text-left p-3 rounded-xl text-[10px] font-black border transition-all flex justify-between items-center uppercase break-words ${isCurrent ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>
+                   <Link key={t} href={`/cosmos/${rawLang}/${tSlug}/${sSlug}${rawDate ? `?date=${rawDate}` : ''}`} className={`w-full text-start p-3 rounded-xl text-[10px] font-black border transition-all flex justify-between items-center break-words ${isCurrent ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>
                      {safeUpper(getUIString(TOPICS_DICT, rawLang, t, t), rawLang)}
                      {isCurrent && <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_10px_cyan]"></div>}
                    </Link>
@@ -146,8 +154,8 @@ export default function ZodiacArticle() {
            </div>
 
            <div className="mt-auto p-6 bg-red-500/5 border border-red-500/10 rounded-3xl w-full">
-              <p className="text-[9px] font-black text-red-400 tracking-widest mb-2 flex items-center gap-2 uppercase">
-                <i className="fa-solid fa-triangle-exclamation"></i> {getUIString(UI_DICT, rawLang, 'legal', 'Legal Disclaimer')}
+              <p className={`text-[9px] font-black text-red-400 mb-2 flex items-center gap-2 ${trackingWidest}`}>
+                <i className="fa-solid fa-triangle-exclamation"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'legal', 'Legal Disclaimer'), rawLang)}
               </p>
               <p className="text-[11px] text-white/50 leading-relaxed font-medium">
                 {getUIString(UI_DICT, rawLang, 'warning', 'These analyses are AI-generated based on astronomical data. Commercial use or sharing for profit is strictly prohibited.')}
@@ -158,14 +166,16 @@ export default function ZodiacArticle() {
         <main className="flex-1 bg-black p-8 md:p-20 overflow-y-auto relative no-scrollbar">
           <div className="max-w-3xl mx-auto">
             <div className="mb-12 w-full">
-              <h2 className="text-3xl md:text-4xl font-bold mb-8 text-white/90 uppercase break-words w-full">{insight.meta_title}</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-8 text-white/90 break-words w-full">
+                {safeUpper(insight.meta_title, rawLang)}
+              </h2>
               
               <div className="flex items-center gap-2 mb-10 p-2 bg-white/5 rounded-2xl border border-white/10 w-max shadow-2xl shadow-black">
-                  <div className="px-3 border-r border-white/10">
+                  <div className="px-3 border-e border-white/10">
                       <i className={`fa-solid ${playingState === 'playing' ? 'fa-waveform text-cyan-400 animate-pulse' : 'fa-volume-high text-slate-500'}`}></i>
                   </div>
                   <button onClick={toggleAudio} className="hover:bg-cyan-500/10 text-slate-300 hover:text-cyan-400 p-3 rounded-xl transition group flex items-center justify-center w-10 h-10">
-                      <i className={`fa-solid ${playingState === 'playing' ? 'fa-pause' : 'fa-play'} text-xl group-hover:scale-110 transition-transform`}></i>
+                      <i className={`fa-solid ${playingState === 'playing' ? 'fa-pause' : 'fa-play rtl:rotate-180'} text-xl group-hover:scale-110 transition-transform`}></i>
                   </button>
                   <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
                   <button onClick={stopAudio} className="hover:bg-red-500/10 p-3 rounded-xl transition text-slate-500 hover:text-red-500 flex items-center justify-center w-10 h-10">
@@ -173,13 +183,13 @@ export default function ZodiacArticle() {
                   </button>
               </div>
 
-              <p className="text-2xl md:text-3xl font-light italic text-[#D4AF37] leading-relaxed opacity-90 border-l-4 border-[#D4AF37] pl-8">
+              <p className={`text-2xl md:text-3xl font-light text-[#D4AF37] leading-relaxed opacity-90 border-s-4 border-[#D4AF37] ps-8 ${fontItalic}`}>
                 {getUIString(UI_DICT, rawLang, 'quote', '"The stars do not compel, they impel. This is your personal cosmic weather report."')}
               </p>
             </div>
 
             <article className="prose prose-invert max-w-none">
-              <div className="text-xl leading-[2.1] text-white/70 space-y-12 first-letter:text-8xl first-letter:font-black first-letter:text-[#D4AF37] first-letter:mr-5 first-letter:float-left first-letter:mt-3 break-words">
+              <div className="text-xl leading-[2.1] text-white/70 space-y-12 first-letter:text-8xl first-letter:font-black first-letter:text-[#D4AF37] first-letter:me-5 first-letter:float-start first-letter:mt-3 break-words">
                 {insight.content_body}
               </div>
             </article>
@@ -188,8 +198,12 @@ export default function ZodiacArticle() {
               <div className="grid gap-6">
                 {faqData && Array.isArray(faqData) && faqData.map((faq: any, idx: number) => (
                   <div key={idx} className="bg-white/5 p-10 rounded-[3rem] border border-white/5 hover:border-cyan-500/30 transition-all group">
-                    <p className="text-cyan-400 font-black text-xs mb-4 uppercase tracking-widest">Q: {faq?.question}</p>
-                    <p className="text-white/40 text-sm leading-relaxed italic group-hover:text-white/60 transition-colors">A: {faq?.answer}</p>
+                    <p className={`text-cyan-400 font-black text-xs mb-4 ${trackingWidest}`}>
+                      {safeUpper(`Q: ${faq?.question}`, rawLang)}
+                    </p>
+                    <p className={`text-white/40 text-sm leading-relaxed group-hover:text-white/60 transition-colors ${fontItalic}`}>
+                      A: {faq?.answer}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -199,14 +213,14 @@ export default function ZodiacArticle() {
       </div>
 
       <footer className="py-12 text-center border-t border-white/5 bg-black mt-auto shrink-0 z-50">
-          <div className="max-w-7xl mx-auto flex flex-col gap-6 px-6 text-[10px] tracking-[0.4em] text-slate-600 font-bold uppercase">
+          <div className={`max-w-7xl mx-auto flex flex-col gap-6 px-6 text-[10px] text-slate-600 font-bold ${trackingWide}`}>
               <nav className="flex justify-center flex-wrap gap-8">
                   <Link href="/" className="hover:text-white transition">{safeUpper(getUIString(UI_DICT, rawLang, 'home', 'Home'), rawLang)}</Link>
                   <Link href="/characters" className="hover:text-white transition">{safeUpper(getUIString(UI_DICT, rawLang, 'char', 'Characters'), rawLang)}</Link>
                   <Link href="/privacy" className="hover:text-white transition">{safeUpper(getUIString(UI_DICT, rawLang, 'priv', 'Privacy Policy'), rawLang)}</Link>
                   <Link href="/terms" className="hover:text-white transition">{safeUpper(getUIString(UI_DICT, rawLang, 'terms', 'Terms of Service'), rawLang)}</Link>
               </nav>
-              <p className="text-[9px] text-slate-800 tracking-[0.6em] pt-4 border-t border-white/5">© 2026 GEMICHA | ALL CELESTIAL RIGHTS RESERVED</p>
+              <p className={`text-[9px] text-slate-800 pt-4 border-t border-white/5 ${trackingWide}`}>© 2026 GEMICHA | ALL CELESTIAL RIGHTS RESERVED</p>
           </div>
       </footer>
     </div>
