@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
+// İŞTE BURASI DÜZELTİLDİ: Artık @/ yerine ../../ kullanıyoruz
 import { LANG_NAMES, ZODIAC_SIGNS, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getUIString, safeUpper } from '../../lib/cosmos-constants';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -12,8 +13,8 @@ export default function GlobalCosmosPortal() {
   const [activeSign, setActiveSign] = useState('all');
   const [activeTopic, setActiveTopic] = useState('all');
   const [targetDate, setTargetDate] = useState('');
-  const [sortOrder, setSortOrder] = useState('newest'); // YENİ: Sıralama Filtresi
-  const [viewMode, setViewMode] = useState('grid'); // YENİ: Görünüm Filtresi
+  const [sortOrder, setSortOrder] = useState('newest'); 
+  const [viewMode, setViewMode] = useState('grid'); 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -104,7 +105,6 @@ export default function GlobalCosmosPortal() {
 
         <main className="flex-1 bg-black overflow-y-auto no-scrollbar p-6 md:p-12 pb-32">
           
-          {/* YENİ: SIRALAMA VE GÖRÜNÜM FİLTRESİ */}
           <div className="flex justify-between items-end mb-12 flex-wrap gap-6">
               <header>
                 <span className="text-cyan-500 text-[10px] font-black tracking-[0.4em] mb-3 block">{safeUpper("Insights & Cosmos", lang)}</span>
@@ -137,7 +137,6 @@ export default function GlobalCosmosPortal() {
           ) : (
             <div className={viewMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl" : "flex flex-col gap-6 max-w-4xl"}>
               {filteredInsights.map((item) => {
-                // Temiz (Slugify) URL Yolu
                 const cleanTopic = slugify(getUIString(TOPICS_DICT, lang, item.topic.toLowerCase(), item.topic));
                 const cleanSign = slugify(getUIString(ZODIAC_DICT, lang, item.zodiac_sign.toLowerCase(), item.zodiac_sign));
 
