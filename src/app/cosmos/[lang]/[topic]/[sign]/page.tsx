@@ -111,9 +111,17 @@ export default function ZodiacArticle() {
                 </Link>
              </div>
              <div className="h-4 w-[1px] bg-white/10 hidden md:block"></div>
-             <select value={rawLang} onChange={(e) => handleLangChange(e.target.value)} className="bg-[#111] border border-white/20 rounded px-2 py-1 text-xs font-bold uppercase outline-none cursor-pointer">
-                {Object.entries(LANG_NAMES).map(([code, name]) => <option key={code} value={code} className="bg-[#111]">{name}</option>)}
-             </select>
+<select value={rawLang} onChange={(e) => handleLangChange(e.target.value)} className="bg-[#111] border border-white/20 rounded px-2 py-1 text-xs font-bold uppercase outline-none cursor-pointer">
+  {Object.entries(LANG_NAMES).map(([code, fallbackName]) => {
+     let displayLangName = fallbackName;
+     try {
+         // Aktif dile göre (rawLang) dillerin adını anında çevirir!
+         const translated = new Intl.DisplayNames([rawLang], { type: 'language' }).of(code);
+         if (translated) displayLangName = translated;
+     } catch (e) {}
+     return <option key={code} value={code} className="bg-[#111]">{displayLangName}</option>
+  })}
+</select>
           </div>
         </div>
       </nav>
