@@ -16,7 +16,6 @@ export async function GET() {
     "bn", "id", "ms", "th", "vi", "uk", "fa", "ur", "ta", "te", "bg", "tl", 
     "hr", "sr", "sk", "sl", "et", "lv", "lt", "ca", "az", "kk"
   ];
-
   const zodiacs = [
     'koc', 'boga', 'ikizler', 'yengec', 'aslan', 'basak', 
     'terazi', 'akrep', 'yay', 'oglak', 'kova', 'balik'
