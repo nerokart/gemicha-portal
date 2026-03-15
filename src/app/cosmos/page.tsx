@@ -2,9 +2,17 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { LANG_NAMES, ZODIAC_SIGNS, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getUIString, safeUpper } from '../../lib/cosmos-constants';
+
+// DİKKAT 1: ZODIAC_SIGNS importunu sildim çünkü hatayı o veriyordu!
+import { LANG_NAMES, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getUIString, safeUpper } from '../../lib/cosmos-constants';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+
+// DİKKAT 2: ÇÖKMEYİ SIFIRLAYAN LİSTE (Dışarıdan çekmek yerine buraya kazıdık)
+const ZODIAC_LIST = [
+  'koc', 'boga', 'ikizler', 'yengec', 'aslan', 'basak', 
+  'terazi', 'akrep', 'yay', 'oglak', 'kova', 'balik'
+];
 
 export default function GlobalCosmosPortal() {
   const [insights, setInsights] = useState<any[]>([]);
@@ -15,11 +23,8 @@ export default function GlobalCosmosPortal() {
   const [sortOrder, setSortOrder] = useState('newest'); 
   const [viewMode, setViewMode] = useState<'cols-2' | 'cols-4'>('cols-2');
   const [loading, setLoading] = useState(true);
-
-  // ÇÖKMEYİ (HYDRATION ERROR) ENGELLEYEN STATE
   const [mounted, setMounted] = useState(false);
 
-  // RTL dillerinin listesi
   const rtlLangs = ['ar', 'he', 'fa', 'ur'];
   const isRTL = rtlLangs.includes(lang);
 
@@ -29,9 +34,7 @@ export default function GlobalCosmosPortal() {
   const fontItalic = isRTL ? 'not-italic' : 'italic';
 
   useEffect(() => {
-    // Component tarayıcıda yüklendikten sonra çalışmasını sağlayan kalkan
     setMounted(true);
-    
     if (typeof window !== 'undefined') {
       const savedLang = localStorage.getItem('gemicha_lang') || 'en';
       setLang(savedLang);
@@ -40,16 +43,21 @@ export default function GlobalCosmosPortal() {
       
       const today = new Date().toISOString().split('T')[0];
       setTargetDate(today);
-      fetchGlobalInsights(savedLang, today, 'newest');
+      fetchGlobalInsights(savedLang, today, sortOrder || 'newest');
     }
   }, []);
 
   const fetchGlobalInsights = async (selectedLang: string, date: string, order: string) => {
     setLoading(true);
-    let query = supabase.from('gemicha_insights').select('*').eq('language', selectedLang).order('created_at', { ascending: order === 'oldest' });
-    if (date) query = query.eq('target_date', date);
-    const { data } = await query;
-    if (data) setInsights(data);
+    try {
+      let query = supabase.from('gemicha_insights').select('*').eq('language', selectedLang).order('created_at', { ascending: order === 'oldest' });
+      if (date) query = query.eq('target_date', date);
+      const { data, error } = await query;
+      if (error) console.error("Veri çekme hatası:", error);
+      if (data) setInsights(data);
+    } catch(err) {
+      console.error(err);
+    }
     setLoading(false);
   };
 
@@ -64,11 +72,13 @@ export default function GlobalCosmosPortal() {
   };
 
   const filteredInsights = insights.filter(i => {
-    return (activeSign === 'all' || i.zodiac_sign.toLowerCase() === activeSign.toLowerCase()) &&
-           (activeTopic === 'all' || i.topic.toLowerCase() === activeTopic.toLowerCase());
+    // DİKKAT 3: VERİTABANINDAN BOŞ VERİ GELİRSE ÇÖKMESİN DİYE ? (GÜVENLİK) EKLENDİ
+    const signMatch = activeSign === 'all' || i.zodiac_sign?.toLowerCase() === activeSign.toLowerCase();
+    const topicMatch = activeTopic === 'all' || i.topic?.toLowerCase() === activeTopic.toLowerCase();
+    return signMatch && topicMatch;
   });
 
-  // SUNUCU (SERVER) RENDER ANINDA BEYAZ EKRAN/ÇÖKME ÖNLEYİCİ
+  // SUNUCU VE İSTEMCİ ÇARPIŞMASINI ENGELLEYEN YAPI
   if (!mounted) {
     return <div className="min-h-screen bg-[#000]" />;
   }
@@ -76,7 +86,6 @@ export default function GlobalCosmosPortal() {
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="bg-[#000] text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] flex flex-col overflow-hidden">
       
-      {/* MENÜ ALANI - MOBİLDE SIKIŞTIRMA VE KÜÇÜLTME UYGULANDI */}
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-[100] bg-black/80 backdrop-blur-md px-2 md:px-8 shrink-0 overflow-hidden">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center gap-1 md:gap-2 flex-nowrap">
           <Link href="/" className="flex items-center gap-1.5 md:gap-3 group shrink-0">
@@ -94,7 +103,7 @@ export default function GlobalCosmosPortal() {
             </div>
             <div className="h-4 w-[1px] bg-white/10 hidden md:block shrink-0"></div>
             <select value={lang} onChange={(e) => handleLangChange(e.target.value)} className="bg-[#111] border border-white/20 rounded px-1.5 md:px-2 py-1 text-[8px] sm:text-[10px] md:text-xs font-bold uppercase outline-none cursor-pointer w-auto whitespace-nowrap shrink-0">
-              {Object.entries(LANG_NAMES).map(([code, fallbackName]) => {
+              {Object.entries(LANG_NAMES || {}).map(([code, fallbackName]) => {
                  let displayLangName = fallbackName;
                  try {
                      const translated = new Intl.DisplayNames([lang], { type: 'language' }).of(code);
@@ -124,7 +133,8 @@ export default function GlobalCosmosPortal() {
                 <button onClick={() => setActiveSign('all')} className={`p-2 rounded-xl text-[9px] font-black border transition-all ${activeSign === 'all' ? 'bg-white text-black border-white' : 'bg-white/5 border-transparent text-gray-500'}`}>
                   {safeUpper(getUIString(TOPICS_DICT, lang, 'all', 'ALL'), lang)}
                 </button>
-                {ZODIAC_SIGNS.map(s => (
+                {/* ZODIAC_SIGNS YERİNE ZODIAC_LIST KULLANILDI */}
+                {ZODIAC_LIST.map(s => (
                   <button key={s} onClick={() => setActiveSign(s)} className={`p-2 rounded-xl text-[9px] font-black border transition-all uppercase ${activeSign === s ? 'bg-[#D4AF37] text-black border-[#D4AF37]' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>
                     {safeUpper(getUIString(ZODIAC_DICT, lang, s, s), lang)}
                   </button>
@@ -183,26 +193,30 @@ export default function GlobalCosmosPortal() {
           ) : (
             <div className={`grid w-full transition-all duration-500 ${viewMode === 'cols-2' ? "grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4"}`}>
               {filteredInsights.map((item) => {
-                const cleanTopic = slugify(getUIString(TOPICS_DICT, lang, item.topic.toLowerCase(), item.topic));
-                const cleanSign = slugify(getUIString(ZODIAC_DICT, lang, item.zodiac_sign.toLowerCase(), item.zodiac_sign));
+                // DİKKAT 4: VERİ YOKSA DİYE GÜVENLİK YAMALARI
+                const rawTopic = item.topic || 'ask';
+                const rawSign = item.zodiac_sign || 'koc';
+                
+                const cleanTopic = slugify(getUIString(TOPICS_DICT, lang, rawTopic.toLowerCase(), rawTopic));
+                const cleanSign = slugify(getUIString(ZODIAC_DICT, lang, rawSign.toLowerCase(), rawSign));
 
                 return (
                   <Link href={`/cosmos/${lang}/${cleanTopic}/${cleanSign}${targetDate ? `?date=${targetDate}` : ''}`} key={item.id} 
                     className={`group relative bg-[#050505] border border-white/5 overflow-hidden hover:border-[#D4AF37]/50 transition-all duration-500 flex flex-col hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#D4AF37]/10 ${viewMode === 'cols-2' ? 'rounded-[2rem]' : 'rounded-2xl md:rounded-[2rem]'}`}
                   >
                     <div className="relative overflow-hidden aspect-video w-full shrink-0">
-                      <img src={`https://gemicha-portal.vercel.app/images/zodiac/${item.zodiac_sign.toLowerCase()}.webp`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105 opacity-60" />
+                      <img src={`https://gemicha-portal.vercel.app/images/zodiac/${rawSign.toLowerCase()}.webp`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105 opacity-60" />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent"></div>
                     </div>
                     
                     <div className={`flex-1 flex flex-col justify-start ${viewMode === 'cols-2' ? 'p-8' : 'p-3 md:p-5'}`}>
                       <div className="flex justify-between items-center mb-3">
-                        <span className={`text-[#D4AF37] font-black uppercase ${trackingWidest} ${viewMode === 'cols-2' ? 'text-[10px]' : 'text-[8px] md:text-[10px]'}`}>{safeUpper(getUIString(ZODIAC_DICT, lang, item.zodiac_sign.toLowerCase(), item.zodiac_sign), lang)}</span>
-                        <span className={`bg-white/5 px-2 py-1 md:px-3 rounded-full font-black text-white/40 uppercase ${viewMode === 'cols-2' ? 'text-[9px]' : 'text-[7px] md:text-[9px]'}`}>{safeUpper(getUIString(TOPICS_DICT, lang, item.topic.toLowerCase(), item.topic), lang)}</span>
+                        <span className={`text-[#D4AF37] font-black uppercase ${trackingWidest} ${viewMode === 'cols-2' ? 'text-[10px]' : 'text-[8px] md:text-[10px]'}`}>{safeUpper(getUIString(ZODIAC_DICT, lang, rawSign.toLowerCase(), rawSign), lang)}</span>
+                        <span className={`bg-white/5 px-2 py-1 md:px-3 rounded-full font-black text-white/40 uppercase ${viewMode === 'cols-2' ? 'text-[9px]' : 'text-[7px] md:text-[9px]'}`}>{safeUpper(getUIString(TOPICS_DICT, lang, rawTopic.toLowerCase(), rawTopic), lang)}</span>
                       </div>
                       
                       <h3 className={`font-bold leading-tight group-hover:text-[#D4AF37] transition-colors uppercase ${viewMode === 'cols-2' ? 'text-2xl mb-4' : 'text-sm md:text-lg mb-2'} break-words`}>
-                        {safeUpper(item.meta_title, lang)}
+                        {safeUpper(item.meta_title || "", lang)}
                       </h3>
                       
                       {viewMode === 'cols-2' && <p className="text-white/50 leading-relaxed font-medium text-sm line-clamp-3">{item.content_body}</p>}
