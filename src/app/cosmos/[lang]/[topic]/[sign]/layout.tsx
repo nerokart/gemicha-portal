@@ -33,6 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    // YENİ EKLENEN SATIR: Yandex, Bing ve global ağlar için dinamik anahtar kelimeler
+    keywords: [displaySign, displayTopic, 'Gemicha', 'astroloji', 'burç yorumları', `${displaySign} ${displayTopic}`, 'yapay zeka astroloji', 'neural report'],
     alternates: {
       canonical: url,
     },
