@@ -10,9 +10,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params;
   const lang = resolvedParams.lang || 'en';
 
-  // Sözlükten çevirileri alıyoruz
   const cosmosTitle = getUIString(UI_DICT, lang, 'cosmos', 'COSMOS');
-  const description = getUIString(UI_DICT, lang, 'warning', 'Gemicha Neural Report: AI-generated daily astrology and zodiac analysis.');
+  const description = getUIString(UI_DICT, lang, 'warning', 'Gemicha Neural Report: AI-powered astrology.');
 
   const title = `${safeUpper(cosmosTitle, lang)} | GEMICHA`;
 
@@ -26,10 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'GEMICHA',
       images: [
         {
-          // 💡 DİKKAT: Resmin tam ve kesin linki
           url: 'https://gemicha-portal.vercel.app/images/cosmos-cover.webp',
-          width: 1200,
-          height: 675,
+          width: 1200, // 💡 WhatsApp'a "resim bu boyutta" diyoruz
+          height: 630, // 💡 Standart sosyal medya boyutu
           alt: 'Gemicha Cosmos',
         },
       ],
