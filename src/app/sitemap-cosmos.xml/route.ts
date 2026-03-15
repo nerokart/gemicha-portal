@@ -1,6 +1,9 @@
 // Next.js'in bu sayfayı eksik önbelleğe almasını engeller (Zorunlu Dinamik)
 export const dynamic = 'force-dynamic';
 
+// Sabitleri ve çeviri fonksiyonlarını içeri aktarıyoruz (Dosya yolu projenizin klasör yapısına göre '../../lib/cosmos-constants' gibi değişebilir)
+import { ZODIAC_DICT, TOPICS_DICT, slugify, getUIString } from '../../../lib/cosmos-constants';
+
 export async function GET() {
   const baseUrl = 'https://www.gemicha.com';
 
@@ -33,8 +36,14 @@ export async function GET() {
   langs.forEach((lang) => {
     zodiacs.forEach((sign) => {
       topics.forEach((topic) => {
+        
+        // URL'DEKİ KELİMELERİ GEÇERLİ DİLE ÇEVİRİP KÜÇÜK HARFE (SLUG) DÖNÜŞTÜRÜYORUZ
+        const localizedTopic = slugify(getUIString(TOPICS_DICT, lang, topic, topic));
+        const localizedSign = slugify(getUIString(ZODIAC_DICT, lang, sign, sign));
+
         xml += `  <url>\n`;
-        xml += `    <loc>${baseUrl}/cosmos/${lang}/${topic}/${sign}</loc>\n`;
+        // TÜRKÇE KELİMELER YERİNE ARTIK YUKARIDAKİ ÇEVRİLMİŞ (LOCALIZED) KELİMELER BASILACAK
+        xml += `    <loc>${baseUrl}/cosmos/${lang}/${localizedTopic}/${localizedSign}</loc>\n`;
         xml += `    <lastmod>${targetDate}</lastmod>\n`; // HER GÜN OTOMATİK GÜNCELLENEN TARİH ETİKETİ
         xml += `    <changefreq>daily</changefreq>\n`;
         xml += `    <priority>0.8</priority>\n`;
