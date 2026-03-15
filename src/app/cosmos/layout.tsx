@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
-import { UI_DICT, getUIString, safeUpper } from '../../../lib/cosmos-constants';
+// 💡 DÜZELTME: Dosya yolu ../../../ yerine ../../ yapıldı
+import { UI_DICT, getUIString, safeUpper } from '../../lib/cosmos-constants';
 
 type Props = {
   children: React.ReactNode;
@@ -12,7 +13,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Sözlükten (UI_DICT) çevirileri alıyoruz
   const cosmosTitle = getUIString(UI_DICT, lang, 'cosmos', 'COSMOS');
-  const homeTitle = getUIString(UI_DICT, lang, 'home', 'HOME');
   const description = getUIString(UI_DICT, lang, 'warning', 'Gemicha Neural Report: AI-generated daily astrology and zodiac analysis.');
 
   const title = `${safeUpper(cosmosTitle, lang)} | GEMICHA`;
