@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-// 💡 DÜZELTME: Dosya yolu ../../../ yerine ../../ yapıldı
 import { UI_DICT, getUIString, safeUpper } from '../../lib/cosmos-constants';
 
 type Props = {
@@ -11,7 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params;
   const lang = resolvedParams.lang || 'en';
 
-  // Sözlükten (UI_DICT) çevirileri alıyoruz
+  // Sözlükten çevirileri alıyoruz
   const cosmosTitle = getUIString(UI_DICT, lang, 'cosmos', 'COSMOS');
   const description = getUIString(UI_DICT, lang, 'warning', 'Gemicha Neural Report: AI-generated daily astrology and zodiac analysis.');
 
@@ -27,6 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'GEMICHA',
       images: [
         {
+          // 💡 DİKKAT: Resmin tam ve kesin linki
           url: 'https://gemicha-portal.vercel.app/images/cosmos-cover.webp',
           width: 1200,
           height: 675,
