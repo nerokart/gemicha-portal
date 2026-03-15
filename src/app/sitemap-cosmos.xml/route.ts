@@ -27,17 +27,26 @@ export async function GET() {
 
   xml += `  <url>\n    <loc>${baseUrl}/cosmos</loc>\n    <lastmod>${targetDate}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
 
-  langs.forEach((lang) => {
+langs.forEach((lang) => {
     zodiacs.forEach((sign) => {
       topics.forEach((topic) => {
         
-        // KELİMELERİ SÖZLÜKTEN O DİLE ÇEVİRİP KÜÇÜK HARFE (URL FORMATINA) ÇEVİRİYORUZ
-        const localizedTopic = slugify(getUIString(TOPICS_DICT, lang, topic, topic));
-        const localizedSign = slugify(getUIString(ZODIAC_DICT, lang, sign, sign));
+        // 1. Önce çeviriyi ham olarak al
+        const rawTopicTranslation = getUIString(TOPICS_DICT, lang, topic, topic);
+        const rawSignTranslation = getUIString(ZODIAC_DICT, lang, sign, sign);
+
+        // 2. Çeviri varsa onu, yoksa veya boşsa orijinal 'topic'/'sign' değerini kullan
+        const topicToSlug = (rawTopicTranslation && rawTopicTranslation.trim() !== "") ? rawTopicTranslation : topic;
+        const signToSlug = (rawSignTranslation && rawSignTranslation.trim() !== "") ? rawSignTranslation : sign;
+
+        // 3. Şimdi güvenle slugify yap (Boş URL riskini sıfırladık)
+        const localizedTopic = slugify(topicToSlug);
+        const localizedSign = slugify(signToSlug);
 
         xml += `  <url>\n`;
-        // TÜRKÇE YERİNE ARTIK ÇEVRİLMİŞ (LOKALİZE) KELİMELER BASILIYOR VE ÖZEL KARAKTERLER ENCODE EDİLİYOR
+        // 4. encodeURI ile Kiril, Arapça vb. karakterleri Google'ın sevdiği güvenli formata çeviriyoruz
         const safeUrl = encodeURI(`${baseUrl}/cosmos/${lang}/${localizedTopic}/${localizedSign}`);
+        
         xml += `    <loc>${safeUrl}</loc>\n`;
         xml += `    <lastmod>${targetDate}</lastmod>\n`; 
         xml += `    <changefreq>daily</changefreq>\n`;
