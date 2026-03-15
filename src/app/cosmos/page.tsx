@@ -16,25 +16,32 @@ export default function GlobalCosmosPortal() {
   const [viewMode, setViewMode] = useState<'cols-2' | 'cols-4'>('cols-2');
   const [loading, setLoading] = useState(true);
 
+  // ÇÖKMEYİ (HYDRATION ERROR) ENGELLEYEN STATE
+  const [mounted, setMounted] = useState(false);
+
   // RTL dillerinin listesi
   const rtlLangs = ['ar', 'he', 'fa', 'ur'];
   const isRTL = rtlLangs.includes(lang);
 
-  // ARAPÇA İÇİN TİPOGRAFİ KURTARICILARI (Bitişik dillerde boşluk/italik iptali)
   const trackingWidest = isRTL ? 'tracking-normal' : 'tracking-widest';
   const trackingWide = isRTL ? 'tracking-normal' : 'tracking-[0.4em]';
   const trackingTight = isRTL ? 'tracking-normal' : 'tracking-tighter';
   const fontItalic = isRTL ? 'not-italic' : 'italic';
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('gemicha_lang') || 'en';
-    setLang(savedLang);
-    document.documentElement.lang = savedLang;
-    document.documentElement.dir = rtlLangs.includes(savedLang) ? 'rtl' : 'ltr';
+    // Component tarayıcıda yüklendikten sonra çalışmasını sağlayan kalkan
+    setMounted(true);
     
-    const today = new Date().toISOString().split('T')[0];
-    setTargetDate(today);
-    fetchGlobalInsights(savedLang, today, sortOrder);
+    if (typeof window !== 'undefined') {
+      const savedLang = localStorage.getItem('gemicha_lang') || 'en';
+      setLang(savedLang);
+      document.documentElement.lang = savedLang;
+      document.documentElement.dir = rtlLangs.includes(savedLang) ? 'rtl' : 'ltr';
+      
+      const today = new Date().toISOString().split('T')[0];
+      setTargetDate(today);
+      fetchGlobalInsights(savedLang, today, 'newest');
+    }
   }, []);
 
   const fetchGlobalInsights = async (selectedLang: string, date: string, order: string) => {
@@ -48,9 +55,11 @@ export default function GlobalCosmosPortal() {
 
   const handleLangChange = (newLang: string) => {
     setLang(newLang); 
-    localStorage.setItem('gemicha_lang', newLang); 
-    document.documentElement.lang = newLang;
-    document.documentElement.dir = rtlLangs.includes(newLang) ? 'rtl' : 'ltr';
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gemicha_lang', newLang); 
+      document.documentElement.lang = newLang;
+      document.documentElement.dir = rtlLangs.includes(newLang) ? 'rtl' : 'ltr';
+    }
     fetchGlobalInsights(newLang, targetDate, sortOrder);
   };
 
@@ -58,6 +67,11 @@ export default function GlobalCosmosPortal() {
     return (activeSign === 'all' || i.zodiac_sign.toLowerCase() === activeSign.toLowerCase()) &&
            (activeTopic === 'all' || i.topic.toLowerCase() === activeTopic.toLowerCase());
   });
+
+  // SUNUCU (SERVER) RENDER ANINDA BEYAZ EKRAN/ÇÖKME ÖNLEYİCİ
+  if (!mounted) {
+    return <div className="min-h-screen bg-[#000]" />;
+  }
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="bg-[#000] text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] flex flex-col overflow-hidden">
@@ -79,17 +93,16 @@ export default function GlobalCosmosPortal() {
                 </Link>
             </div>
             <div className="h-4 w-[1px] bg-white/10 hidden md:block shrink-0"></div>
-<select value={lang} onChange={(e) => handleLangChange(e.target.value)} className="bg-[#111] border border-white/20 rounded px-1.5 md:px-2 py-1 text-[8px] sm:text-[10px] md:text-xs font-bold uppercase outline-none cursor-pointer w-auto whitespace-nowrap shrink-0">
-  {Object.entries(LANG_NAMES).map(([code, fallbackName]) => {
-     let displayLangName = fallbackName;
-     try {
-         // Aktif dile göre (lang) dillerin adını anında çevirir!
-         const translated = new Intl.DisplayNames([lang], { type: 'language' }).of(code);
-         if (translated) displayLangName = translated;
-     } catch (e) {}
-     return <option key={code} value={code} className="bg-[#111]">{displayLangName}</option>
-  })}
-</select>
+            <select value={lang} onChange={(e) => handleLangChange(e.target.value)} className="bg-[#111] border border-white/20 rounded px-1.5 md:px-2 py-1 text-[8px] sm:text-[10px] md:text-xs font-bold uppercase outline-none cursor-pointer w-auto whitespace-nowrap shrink-0">
+              {Object.entries(LANG_NAMES).map(([code, fallbackName]) => {
+                 let displayLangName = fallbackName;
+                 try {
+                     const translated = new Intl.DisplayNames([lang], { type: 'language' }).of(code);
+                     if (translated) displayLangName = translated;
+                 } catch (e) {}
+                 return <option key={code} value={code} className="bg-[#111]">{displayLangName}</option>
+              })}
+            </select>
           </div>
         </div>
       </nav>
@@ -112,8 +125,8 @@ export default function GlobalCosmosPortal() {
                   {safeUpper(getUIString(TOPICS_DICT, lang, 'all', 'ALL'), lang)}
                 </button>
                 {ZODIAC_SIGNS.map(s => (
-                  <button key={s.id} onClick={() => setActiveSign(s.id)} className={`p-2 rounded-xl text-[9px] font-black border transition-all uppercase ${activeSign === s.id ? 'bg-[#D4AF37] text-black border-[#D4AF37]' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>
-                    {safeUpper(getUIString(ZODIAC_DICT, lang, s.id, s.id), lang)}
+                  <button key={s} onClick={() => setActiveSign(s)} className={`p-2 rounded-xl text-[9px] font-black border transition-all uppercase ${activeSign === s ? 'bg-[#D4AF37] text-black border-[#D4AF37]' : 'bg-white/5 border-transparent text-gray-500 hover:text-white'}`}>
+                    {safeUpper(getUIString(ZODIAC_DICT, lang, s, s), lang)}
                   </button>
                 ))}
               </div>
