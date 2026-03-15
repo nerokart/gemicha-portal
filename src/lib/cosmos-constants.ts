@@ -166,13 +166,34 @@ export const UI_DICT: Record<string, any> = {
 };
 
 export const slugify = (str: string) => {
-    const map: any = { 'ç':'c', 'ğ':'g', 'ı':'i', 'ö':'o', 'ş':'s', 'ü':'u', 'ñ':'n', 'é':'e', 'á':'a', 'í':'i', 'ó':'o', 'ú':'u', 'â':'a', 'î':'i', 'û':'u' };
-    return str.toLowerCase().replace(/[çğıöşüñéáíóúâîû]/g, match => map[match] || match).replace(/\s+/g, '-').replace(/^-|-$/g, '');
+  // Büyük harfleri de haritaya ekliyoruz ki toLowerCase() bozmadan önce biz yakalayalım
+  const map: any = { 
+    'Ç':'c', 'ç':'c', 'Ğ':'g', 'ğ':'g', 'İ':'i', 'ı':'i', 'I':'i', 
+    'Ö':'o', 'ö':'o', 'Ş':'s', 'ş':'s', 'Ü':'u', 'ü':'u', 
+    'Ñ':'n', 'ñ':'n', 'É':'e', 'é':'e', 'Á':'a', 'á':'a', 
+    'Í':'i', 'í':'i', 'Ó':'o', 'ó':'o', 'Ú':'u', 'ú':'u', 
+    'Â':'a', 'â':'a', 'Î':'i', 'î':'i', 'Û':'u', 'û':'u' 
+  };
+  
+  return str
+    // 1. Önce büyük/küçük özel harfleri güvenli Latin harflerine çevir
+    .replace(/[ÇçĞğİıIÖöŞşÜüÑñÉéÁáÍíÓóÚúÂâÎîÛû]/g, match => map[match] || match)
+    // 2. Şimdi güvenle küçült
+    .toLowerCase()
+    // 3. JavaScript'in eklediği görünmez 'birleştirici nokta' (combining dot) hatasını temizle
+    .replace(/\u0307/g, '')
+    // 4. Boşlukları tire yap
+    .replace(/\s+/g, '-')
+    // 5. URL'de sorun yaratacak diğer noktalama işaretlerini (isteğe bağlı) temizle
+    .replace(/[^\w\-\u0400-\u04FF\u0600-\u06FF\u0590-\u05FF\u0E00-\u0E7F]/g, '') // Kiril, Arapça, İbranice, Tayca alfabelerine izin verir!
+    // 6. Baştaki ve sondaki tireleri at
+    .replace(/^-|-$/g, '');
 };
 
 export const getBaseIdFromLocalized = (dict: any, lang: string, localizedSlug: string) => {
   const langDict = dict[lang] || dict['en'];
   for (const [key, value] of Object.entries(langDict)) {
+    // Sözlükteki değeri yeni kusursuz slugify ile test edip URL'dekiyle eşleştiriyoruz
     if (slugify(value as string) === localizedSlug) return key;
   }
   return localizedSlug;
