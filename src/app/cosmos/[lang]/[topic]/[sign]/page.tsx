@@ -17,7 +17,6 @@ function ZodiacArticleContent() {
   const [faqData, setFaqData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [playingState, setPlayingState] = useState<'idle' | 'playing' | 'paused'>('idle');
-  // YENİ EKLENDİ: Link kopyalandı efekti için state
   const [copied, setCopied] = useState(false);
 
   const rawLang = decodeURIComponent((params?.lang as string) || 'en').trim();
@@ -126,7 +125,6 @@ function ZodiacArticleContent() {
   };
   const stopAudio = () => { if (typeof window !== 'undefined') window.speechSynthesis.cancel(); setPlayingState('idle'); };
 
-  // YENİ EKLENDİ: Harika Paylaşım Fonksiyonu (Mobil Uyumlu)
   const handleShare = async () => {
     if (typeof window === 'undefined') return;
     const shareUrl = window.location.href;
@@ -142,10 +140,9 @@ function ZodiacArticleContent() {
         console.log("Paylaşım iptal edildi.");
       }
     } else {
-      // Eğer tarayıcı yerel paylaşımı desteklemiyorsa (eski masaüstü vs.) linki kopyala
       navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // 2 saniye sonra tiki eski haline getir
+      setTimeout(() => setCopied(false), 2000); 
     }
   };
 
@@ -238,7 +235,8 @@ function ZodiacArticleContent() {
                  );
               })}
            </div>
-           <div className="mt-auto p-6 bg-red-500/5 border border-red-500/10 rounded-3xl w-full">
+           {/* DİKKAT: Yasal Uyarı masaüstünde sol tarafta görünmeye devam edecek (hidden md:block yapıldı) */}
+           <div className="mt-auto p-6 bg-red-500/5 border border-red-500/10 rounded-3xl w-full hidden md:block">
               <p className={`text-[9px] font-black text-red-400 mb-2 flex items-center gap-2 ${trackingWidest}`}>
                 <i className="fa-solid fa-triangle-exclamation"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'legal', 'Legal Disclaimer'), rawLang)}
               </p>
@@ -255,7 +253,6 @@ function ZodiacArticleContent() {
                 {safeUpper(insight?.meta_title || "", rawLang)}
               </h2>
               
-              {/* YENİ EKLENDİ: Ses kontrollerinin yanına Paylaş butonu yerleştirildi */}
               <div className="flex items-center gap-2 mb-10 p-2 bg-white/5 rounded-2xl border border-white/10 w-max shadow-2xl shadow-black">
                   <div className="px-3 border-e border-white/10">
                       <i className={`fa-solid ${playingState === 'playing' ? 'fa-waveform text-cyan-400 animate-pulse' : 'fa-volume-high text-slate-500'}`}></i>
@@ -268,7 +265,6 @@ function ZodiacArticleContent() {
                       <i className="fa-solid fa-stop text-xl"></i>
                   </button>
                   
-                  {/* PAYLAŞ BUTONU BURADA BAŞLIYOR */}
                   <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
                   <button 
                     onClick={handleShare} 
@@ -302,6 +298,17 @@ function ZodiacArticleContent() {
                 ))}
               </div>
             </section>
+
+            {/* DİKKAT: Yasal Uyarı sadece mobilde yazının ve SSS'in en altında belirecek (md:hidden yapıldı) */}
+            <div className="mt-16 p-6 bg-red-500/5 border border-red-500/10 rounded-3xl w-full md:hidden">
+              <p className={`text-[9px] font-black text-red-400 mb-2 flex items-center gap-2 ${trackingWidest}`}>
+                <i className="fa-solid fa-triangle-exclamation"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'legal', 'Legal Disclaimer'), rawLang)}
+              </p>
+              <p className="text-[11px] text-white/50 leading-relaxed font-medium">
+                {getUIString(UI_DICT, rawLang, 'warning', 'These analyses are AI-generated based on astronomical data. Commercial use or sharing for profit is strictly prohibited.')}
+              </p>
+            </div>
+
           </div>
         </main>
       </div>
