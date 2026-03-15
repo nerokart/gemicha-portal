@@ -1,13 +1,16 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
+
+// Kendi klasör yapına göre import yolunu ayarla (../../../../../ veya ../../)
 import { LANG_NAMES, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getBaseIdFromLocalized, getUIString, safeUpper } from '../../../../../lib/cosmos-constants';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-export default function ZodiacArticle() {
+// 1. ASIL KODUMUZ: Eski "export default function ZodiacArticle" adını "ZodiacArticleContent" yaptık
+function ZodiacArticleContent() {
   const params = useParams(); 
   const searchParams = useSearchParams(); 
   const router = useRouter();
@@ -17,11 +20,18 @@ export default function ZodiacArticle() {
   const [loading, setLoading] = useState(true);
   const [playingState, setPlayingState] = useState<'idle' | 'playing' | 'paused'>('idle');
 
-  // Params güvenli okuma (Optional Chaining)
   const rawLang = decodeURIComponent((params?.lang as string) || 'en').trim();
   const rawTopic = decodeURIComponent((params?.topic as string) || '').trim();
   const rawSign = decodeURIComponent((params?.sign as string) || '').trim();
-  const rawDate = searchParams ? searchParams.get('date') : null;
+
+  const getTodayFormatted = () => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const adjustedDate = new Date(now.getTime() - (offset * 60 * 1000));
+    return adjustedDate.toISOString().split('T')[0];
+  };
+
+  const rawDate = searchParams?.get('date') || getTodayFormatted();
 
   const dbTopic = getBaseIdFromLocalized(TOPICS_DICT, rawLang, rawTopic);
   const dbSign = getBaseIdFromLocalized(ZODIAC_DICT, rawLang, rawSign);
@@ -38,15 +48,11 @@ export default function ZodiacArticle() {
       window.speechSynthesis?.cancel();
       document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
     }
-    return () => { if (typeof window !== 'undefined') window.speechSynthesis?.cancel(); };
-  }, [params?.lang, params?.topic, params?.sign, rawDate, isRTL]);
 
-  useEffect(() => {
     if (insight) {
-      const displaySignName = getUIString(ZODIAC_DICT, rawLang, dbSign, dbSign);
-      const displayTopicName = getUIString(TOPICS_DICT, rawLang, dbTopic, dbTopic);
-      const fullTitle = `${safeUpper(displaySignName, rawLang)} ${safeUpper(displayTopicName, rawLang)} - ${insight?.target_date || ''} Daily Analysis | Gemicha`;
-      document.title = fullTitle;
+      const sName = getUIString(ZODIAC_DICT, rawLang, dbSign, dbSign);
+      const tName = getUIString(TOPICS_DICT, rawLang, dbTopic, dbTopic);
+      document.title = `${safeUpper(sName, rawLang)} ${safeUpper(tName, rawLang)} - ${insight?.target_date || ''} Daily Analysis | Gemicha`;
 
       let metaDesc = document.querySelector('meta[name="description"]');
       if (!metaDesc) {
@@ -57,14 +63,22 @@ export default function ZodiacArticle() {
       const descText = insight?.content_body ? insight.content_body.substring(0, 160).replace(/\s+/g, ' ').trim() : "";
       metaDesc.setAttribute("content", descText + "...");
     }
-  }, [insight, rawLang, dbSign, dbTopic]);
+
+    return () => { if (typeof window !== 'undefined') window.speechSynthesis?.cancel(); };
+  }, [params?.lang, params?.topic, params?.sign, rawDate, insight, isRTL, rawLang, dbSign, dbTopic]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        let mainQuery = supabase.from('gemicha_insights').select('*').ilike('language', rawLang).ilike('topic', dbTopic).ilike('zodiac_sign', dbSign).order('target_date', { ascending: false }).limit(1);
-        if (rawDate) mainQuery = mainQuery.eq('target_date', rawDate);
+        let mainQuery = supabase.from('gemicha_insights')
+          .select('*')
+          .ilike('language', rawLang)
+          .ilike('topic', dbTopic)
+          .ilike('zodiac_sign', dbSign)
+          .eq('target_date', rawDate)
+          .limit(1);
+
         const { data, error } = await mainQuery;
         
         if (error) throw error;
@@ -74,9 +88,11 @@ export default function ZodiacArticle() {
            try { 
              setFaqData(typeof data[0].faq_schema === 'string' ? JSON.parse(data[0].faq_schema) : data[0].faq_schema); 
            } catch(e) { setFaqData([]); }
+        } else {
+           setInsight(null);
         }
       } catch (err) {
-        console.error("Client-side fetch error:", err);
+        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -115,6 +131,7 @@ export default function ZodiacArticle() {
   if (!insight) return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-10 font-['Plus_Jakarta_Sans',sans-serif]">
         <h1 className="text-[#D4AF37] text-4xl font-black mb-4 uppercase italic">Data Missing</h1>
+        <p className="mb-6 text-white/50 text-center">No cosmic data found for {rawSign} in {rawLang} on {rawDate}.</p>
         <Link href="/cosmos" className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase hover:bg-white/10 transition">Return to Cosmos</Link>
       </div>
   );
@@ -124,7 +141,6 @@ export default function ZodiacArticle() {
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black flex flex-col overflow-x-hidden">
-      
       <nav className="h-20 flex items-center border-b border-white/5 sticky top-0 z-50 bg-black/95 px-2 md:px-6 backdrop-blur-md shrink-0 overflow-hidden">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center gap-1 md:gap-2 flex-nowrap">
           <Link href="/" className="flex items-center gap-1.5 md:gap-3 group shrink-0">
@@ -156,7 +172,6 @@ export default function ZodiacArticle() {
       </nav>
 
       <div className="flex flex-1 flex-col md:flex-row">
-        
         <aside className="w-full md:w-[450px] bg-[#020202] border-e border-white/5 p-8 md:p-12 flex flex-col shrink-0 overflow-hidden">
            <div className="mb-6 w-full">
               <span className={`bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full mb-6 inline-block ${trackingWide}`}>
@@ -166,16 +181,13 @@ export default function ZodiacArticle() {
                 {safeUpper(displaySign, rawLang)}
               </h1>
            </div>
-
            <div className="relative rounded-[2rem] overflow-hidden border border-white/5 mb-8 group aspect-square shadow-2xl shadow-cyan-500/5">
               <img src={`https://gemicha-portal.vercel.app/images/zodiac/${dbSign}.webp`} className="w-full h-full object-cover transition-transform duration-1000 scale-105" alt={dbSign} />
               <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-transparent to-transparent"></div>
            </div>
-
            <div className="mb-6">
-              <input type="date" value={insight?.target_date || ""} onChange={(e) => handleDateChange(e.target.value)} onClick={(e) => (e.target as HTMLInputElement).showPicker?.()} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:border-cyan-400 transition-all cursor-pointer" />
+              <input type="date" value={rawDate} onChange={(e) => handleDateChange(e.target.value)} onClick={(e) => (e.target as HTMLInputElement).showPicker?.()} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:border-cyan-400 transition-all cursor-pointer" />
            </div>
-
            <div className="space-y-2 mb-8 w-full">
               {['ask', 'kariyer', 'saglik', 'para'].map(t => {
                  const isCurrent = t === dbTopic;
@@ -189,7 +201,6 @@ export default function ZodiacArticle() {
                  );
               })}
            </div>
-
            <div className="mt-auto p-6 bg-red-500/5 border border-red-500/10 rounded-3xl w-full">
               <p className={`text-[9px] font-black text-red-400 mb-2 flex items-center gap-2 ${trackingWidest}`}>
                 <i className="fa-solid fa-triangle-exclamation"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'legal', 'Legal Disclaimer'), rawLang)}
@@ -206,7 +217,6 @@ export default function ZodiacArticle() {
               <h2 className="text-3xl md:text-4xl font-bold mb-8 text-white/90 break-words w-full">
                 {safeUpper(insight?.meta_title || "", rawLang)}
               </h2>
-              
               <div className="flex items-center gap-2 mb-10 p-2 bg-white/5 rounded-2xl border border-white/10 w-max shadow-2xl shadow-black">
                   <div className="px-3 border-e border-white/10">
                       <i className={`fa-solid ${playingState === 'playing' ? 'fa-waveform text-cyan-400 animate-pulse' : 'fa-volume-high text-slate-500'}`}></i>
@@ -219,21 +229,18 @@ export default function ZodiacArticle() {
                       <i className="fa-solid fa-stop text-xl"></i>
                   </button>
               </div>
-
               <p className={`text-2xl md:text-3xl font-light text-[#D4AF37] leading-relaxed opacity-90 border-s-4 border-[#D4AF37] ps-8 ${fontItalic}`}>
                 {getUIString(UI_DICT, rawLang, 'quote', '"The stars do not compel, they impel. This is your personal cosmic weather report."')}
               </p>
             </div>
-
             <article className="prose prose-invert max-w-none">
               <div className="text-xl leading-[2.1] text-white/70 space-y-12 first-letter:text-8xl first-letter:font-black first-letter:text-[#D4AF37] first-letter:me-5 first-letter:float-start first-letter:mt-3 break-words">
                 {insight?.content_body || ""}
               </div>
             </article>
-
             <section className="mt-20 pt-20 border-t border-white/5">
               <div className="grid gap-6">
-                {faqData && Array.isArray(faqData) && faqData.map((faq: any, idx: number) => (
+                {faqData && faqData.length > 0 && faqData.map((faq: any, idx: number) => (
                   <div key={idx} className="bg-white/5 p-10 rounded-[3rem] border border-white/5 hover:border-cyan-500/30 transition-all group">
                     <p className={`text-cyan-400 font-black text-xs mb-4 ${trackingWidest}`}>
                       {safeUpper(`Q: ${faq?.question || ""}`, rawLang)}
@@ -248,7 +255,6 @@ export default function ZodiacArticle() {
           </div>
         </main>
       </div>
-
       <footer className="py-12 text-center border-t border-white/5 bg-black mt-auto shrink-0 z-50">
           <div className={`max-w-7xl mx-auto flex flex-col gap-6 px-6 text-[10px] text-slate-600 font-bold ${trackingWide}`}>
               <nav className="flex justify-center flex-wrap gap-8">
@@ -261,5 +267,14 @@ export default function ZodiacArticle() {
           </div>
       </footer>
     </div>
+  );
+}
+
+// 2. YENİ EKLENEN KISIM: Next.js'in Build Sırasında İstediği Kalkan (<Suspense>)
+export default function ZodiacArticle() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex justify-center items-center"><div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div></div>}>
+      <ZodiacArticleContent />
+    </Suspense>
   );
 }
