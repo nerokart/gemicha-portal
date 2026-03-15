@@ -145,15 +145,15 @@ function ZodiacArticleContent() {
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center gap-1 md:gap-2 flex-nowrap">
           <Link href="/" className="flex items-center gap-1.5 md:gap-3 group shrink-0">
             <img src="https://gemicha-portal.vercel.app/logo.png" className="h-6 md:h-10 rounded-lg" alt="Gemicha Logo" />
-            <span className={`text-[10px] sm:text-sm md:text-xl font-black text-white shrink-0 ${trackingWidest}`}>{safeUpper("GEMICHA", rawLang)}</span>
+            <span className={`text-[10px] sm:text-sm md:text-xl font-black text-white shrink-0 uppercase ${trackingWidest}`}>GEMICHA</span>
           </Link>
           <div className="flex items-center gap-2 md:gap-6 flex-nowrap shrink-0">
-             <div className="hidden md:flex items-center gap-2 md:gap-6 shrink-0">
+             <div className="flex items-center gap-3 md:gap-6 shrink-0">
                 <Link href="/" className={`text-[8px] sm:text-[10px] md:text-xs font-black text-white/50 hover:text-white transition whitespace-nowrap shrink-0 ${trackingWidest}`}>
-                    <i className="fa-solid fa-house me-1 md:me-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'home', 'HOME'), rawLang)}
+                    <i className="fa-solid fa-house me-1 md:me-1.5"></i> <span className="hidden sm:inline">{safeUpper(getUIString(UI_DICT, rawLang, 'home', 'HOME'), rawLang)}</span>
                 </Link>
                 <Link href="/cosmos" className={`text-[8px] sm:text-[10px] md:text-xs font-black text-white/50 hover:text-white transition whitespace-nowrap shrink-0 ${trackingWidest}`}>
-                    <i className="fa-solid fa-meteor me-1 md:me-1.5"></i> {safeUpper(getUIString(UI_DICT, rawLang, 'cosmos', 'COSMOS'), rawLang)}
+                    <i className="fa-solid fa-meteor me-1 md:me-1.5"></i> <span className="hidden sm:inline">{safeUpper(getUIString(UI_DICT, rawLang, 'cosmos', 'COSMOS'), rawLang)}</span>
                 </Link>
              </div>
              <div className="h-4 w-[1px] bg-white/10 hidden md:block shrink-0"></div>
