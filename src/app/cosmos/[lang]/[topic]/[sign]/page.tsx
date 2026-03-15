@@ -4,12 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 
-// DİKKAT: Bu dosya çok derinde olduğu için 5 adım geriye (../../../../../) gidiyor!
 import { LANG_NAMES, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getBaseIdFromLocalized, getUIString, safeUpper } from '../../../../../lib/cosmos-constants';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-// 1. ASIL KODUMUZ: Eski "export default function ZodiacArticle" adını "ZodiacArticleContent" yaptık
 function ZodiacArticleContent() {
   const params = useParams(); 
   const searchParams = useSearchParams(); 
@@ -19,6 +17,8 @@ function ZodiacArticleContent() {
   const [faqData, setFaqData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [playingState, setPlayingState] = useState<'idle' | 'playing' | 'paused'>('idle');
+  // YENİ EKLENDİ: Link kopyalandı efekti için state
+  const [copied, setCopied] = useState(false);
 
   const rawLang = decodeURIComponent((params?.lang as string) || 'en').trim();
   const rawTopic = decodeURIComponent((params?.topic as string) || '').trim();
@@ -126,18 +126,48 @@ function ZodiacArticleContent() {
   };
   const stopAudio = () => { if (typeof window !== 'undefined') window.speechSynthesis.cancel(); setPlayingState('idle'); };
 
-  if (loading) return <div className="min-h-screen bg-black flex justify-center items-center"><div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div></div>;
+  // YENİ EKLENDİ: Harika Paylaşım Fonksiyonu (Mobil Uyumlu)
+  const handleShare = async () => {
+    if (typeof window === 'undefined') return;
+    const shareUrl = window.location.href;
+    const shareTitle = insight?.meta_title || document.title;
 
-  if (!insight) return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-10 font-['Plus_Jakarta_Sans',sans-serif]">
-        <h1 className="text-[#D4AF37] text-4xl font-black mb-4 uppercase italic">Data Missing</h1>
-        <p className="mb-6 text-white/50 text-center">No cosmic data found for {rawSign} in {rawLang} on {rawDate}.</p>
-        <Link href="/cosmos" className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase hover:bg-white/10 transition">Return to Cosmos</Link>
-      </div>
-  );
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          url: shareUrl
+        });
+      } catch (err) {
+        console.log("Paylaşım iptal edildi.");
+      }
+    } else {
+      // Eğer tarayıcı yerel paylaşımı desteklemiyorsa (eski masaüstü vs.) linki kopyala
+      navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // 2 saniye sonra tiki eski haline getir
+    }
+  };
+
+  if (loading) return <div className="min-h-screen bg-black flex justify-center items-center"><div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div></div>;
 
   const displaySign = getUIString(ZODIAC_DICT, rawLang, dbSign, dbSign);
   const displayTopic = getUIString(TOPICS_DICT, rawLang, dbTopic, dbTopic);
+
+  if (!insight) return (
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-10 font-['Plus_Jakarta_Sans',sans-serif]">
+        <div className="w-12 h-12 border-2 border-cyan-400/20 border-t-cyan-400 rounded-full animate-spin mb-8"></div>
+        <h1 className="text-[#D4AF37] text-2xl md:text-4xl font-black mb-4 uppercase italic text-center">
+          {safeUpper(displaySign, rawLang)} - {safeUpper(displayTopic, rawLang)}
+        </h1>
+        <p className="mb-8 text-white/50 text-center max-w-lg leading-relaxed text-sm md:text-base">
+          The cosmic alignments and neural reports for <strong>{displaySign}</strong> regarding <strong>{displayTopic}</strong> on {rawDate} are currently being processed by our AI. Please return to Cosmos shortly for updated astrological insights.
+        </p>
+        <Link href="/cosmos" className={`px-8 py-3 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-full text-[10px] font-black uppercase hover:bg-cyan-500/20 transition ${trackingWidest}`}>
+          {safeUpper(getUIString(UI_DICT, rawLang, 'cosmos', 'Return to Cosmos'), rawLang)}
+        </Link>
+      </div>
+  );
 
   return (
     <div dir={isRTL ? 'rtl' : 'ltr'} className="bg-black text-white min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-[#D4AF37] selection:text-black flex flex-col overflow-x-hidden">
@@ -174,7 +204,6 @@ function ZodiacArticleContent() {
       <div className="flex flex-1 flex-col md:flex-row">
         <aside className="w-full md:w-[450px] bg-[#020202] border-e border-white/5 p-8 md:p-12 flex flex-col shrink-0 overflow-hidden">
            <div className="mb-6 w-full">
-              {/* MOBİL GERİ BUTONU (ARTIK DİREKT /COSMOS SAYFASINA GİDİYOR) VE NEURAL ETİKETİ BİR ARADA */}
               <div className="flex items-center gap-2 mb-6">
                 <Link href="/cosmos" className={`md:hidden flex items-center gap-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 transition-colors border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-3 py-2 rounded-full ${trackingWide}`}>
                   <i className="fa-solid fa-arrow-left rtl:rotate-180"></i>
@@ -225,6 +254,8 @@ function ZodiacArticleContent() {
               <h2 className="text-3xl md:text-4xl font-bold mb-8 text-white/90 break-words w-full">
                 {safeUpper(insight?.meta_title || "", rawLang)}
               </h2>
+              
+              {/* YENİ EKLENDİ: Ses kontrollerinin yanına Paylaş butonu yerleştirildi */}
               <div className="flex items-center gap-2 mb-10 p-2 bg-white/5 rounded-2xl border border-white/10 w-max shadow-2xl shadow-black">
                   <div className="px-3 border-e border-white/10">
                       <i className={`fa-solid ${playingState === 'playing' ? 'fa-waveform text-cyan-400 animate-pulse' : 'fa-volume-high text-slate-500'}`}></i>
@@ -236,7 +267,18 @@ function ZodiacArticleContent() {
                   <button onClick={stopAudio} className="hover:bg-red-500/10 p-3 rounded-xl transition text-slate-500 hover:text-red-500 flex items-center justify-center w-10 h-10">
                       <i className="fa-solid fa-stop text-xl"></i>
                   </button>
+                  
+                  {/* PAYLAŞ BUTONU BURADA BAŞLIYOR */}
+                  <div className="w-[1px] h-6 bg-white/10 mx-1"></div>
+                  <button 
+                    onClick={handleShare} 
+                    className={`hover:bg-emerald-500/10 p-3 rounded-xl transition flex items-center justify-center w-10 h-10 group ${copied ? 'text-emerald-400' : 'text-slate-500 hover:text-emerald-400'}`}
+                    title={copied ? "Link Kopyalandı!" : "Paylaş"}
+                  >
+                      <i className={`fa-solid ${copied ? 'fa-check' : 'fa-share-nodes'} text-xl group-hover:scale-110 transition-transform`}></i>
+                  </button>
               </div>
+
               <p className={`text-2xl md:text-3xl font-light text-[#D4AF37] leading-relaxed opacity-90 border-s-4 border-[#D4AF37] ps-8 ${fontItalic}`}>
                 {getUIString(UI_DICT, rawLang, 'quote', '"The stars do not compel, they impel. This is your personal cosmic weather report."')}
               </p>
@@ -278,7 +320,6 @@ function ZodiacArticleContent() {
   );
 }
 
-// 2. YENİ EKLENEN KISIM: Next.js'in Build Sırasında İstediği Kalkan (<Suspense>)
 export default function ZodiacArticle() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-black flex justify-center items-center"><div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div></div>}>
