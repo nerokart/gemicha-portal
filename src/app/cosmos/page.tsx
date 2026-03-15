@@ -1,15 +1,17 @@
 "use client";
 import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 // DİKKAT: Sadece 2 adım geriye (../../) gidiyor, çünkü bu dosya src/app/cosmos içinde
 import { LANG_NAMES, ZODIAC_SIGNS, ZODIAC_DICT, TOPICS_DICT, UI_DICT, safeUpper, getUIString, slugify } from '../../lib/cosmos-constants';
 
 function CosmosPageContent() {
-  const searchParams = useSearchParams();
   const [lang, setLang] = useState('en');
+  // Client'ta render edilip edilmediğini kontrol eden state eklendi
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Tarayıcı ortamına geçildiğinde mounted'ı true yap ve dili al
+    setMounted(true);
     if (typeof window !== 'undefined') {
       const savedLang = localStorage.getItem('gemicha_lang') || 'en';
       setLang(savedLang);
@@ -22,6 +24,11 @@ function CosmosPageContent() {
       localStorage.setItem('gemicha_lang', newLang);
     }
   };
+
+  // Sayfa yüklenmeden önce (sunucuda) UI farklılıklarını önlemek için null dön
+  if (!mounted) {
+    return <div className="min-h-screen bg-black" />; 
+  }
 
   const rtlLangs = ['ar', 'he', 'fa', 'ur'];
   const isRTL = rtlLangs.includes(lang);
