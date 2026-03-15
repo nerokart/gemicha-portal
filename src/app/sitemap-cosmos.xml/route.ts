@@ -36,8 +36,9 @@ export async function GET() {
         const localizedSign = slugify(getUIString(ZODIAC_DICT, lang, sign, sign));
 
         xml += `  <url>\n`;
-        // TÜRKÇE YERİNE ARTIK ÇEVRİLMİŞ (LOKALİZE) KELİMELER BASILIYOR
-        xml += `    <loc>${baseUrl}/cosmos/${lang}/${localizedTopic}/${localizedSign}</loc>\n`;
+        // TÜRKÇE YERİNE ARTIK ÇEVRİLMİŞ (LOKALİZE) KELİMELER BASILIYOR VE ÖZEL KARAKTERLER ENCODE EDİLİYOR
+        const safeUrl = encodeURI(`${baseUrl}/cosmos/${lang}/${localizedTopic}/${localizedSign}`);
+        xml += `    <loc>${safeUrl}</loc>\n`;
         xml += `    <lastmod>${targetDate}</lastmod>\n`; 
         xml += `    <changefreq>daily</changefreq>\n`;
         xml += `    <priority>0.8</priority>\n`;
