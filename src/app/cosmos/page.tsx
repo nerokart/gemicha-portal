@@ -90,7 +90,9 @@ export default function GlobalCosmosPortal() {
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center gap-1 md:gap-2 flex-nowrap">
           <Link href="/" className="flex items-center gap-1.5 md:gap-3 group shrink-0">
             <img src="https://gemicha-portal.vercel.app/logo.png" alt="Gemicha" className="h-6 md:h-10 w-auto rounded-lg shrink-0" />
-            <span className={`text-[10px] sm:text-sm md:text-xl font-black text-white uppercase shrink-0 ${trackingWidest}`}>{safeUpper("Gemicha", lang)}</span>
+            <span className={`text-[10px] sm:text-sm md:text-xl font-black text-white uppercase shrink-0 ${trackingWidest}`}>
+  GEMICHA
+</span>
           </Link>
           <div className="flex items-center gap-2 md:gap-6 flex-nowrap shrink-0">
             <div className="hidden md:flex items-center gap-2 md:gap-6 shrink-0">
