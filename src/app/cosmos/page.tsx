@@ -1,13 +1,16 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { LANG_NAMES, ZODIAC_SIGNS, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getUIString, safeUpper } from '../../lib/cosmos-constants';
+
+// Kendi klasör yapına göre import yolunu ayarla (../../../../../ veya ../../)
+import { LANG_NAMES, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getBaseIdFromLocalized, getUIString, safeUpper } from '../../../../../lib/cosmos-constants';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-export default function ZodiacArticle() {
+// 1. ASIL KODUMUZ: Eski "export default function ZodiacArticle" adını "ZodiacArticleContent" yaptık
+function ZodiacArticleContent() {
   const params = useParams(); 
   const searchParams = useSearchParams(); 
   const router = useRouter();
@@ -17,12 +20,10 @@ export default function ZodiacArticle() {
   const [loading, setLoading] = useState(true);
   const [playingState, setPlayingState] = useState<'idle' | 'playing' | 'paused'>('idle');
 
-  // Params güvenli okuma
   const rawLang = decodeURIComponent((params?.lang as string) || 'en').trim();
   const rawTopic = decodeURIComponent((params?.topic as string) || '').trim();
   const rawSign = decodeURIComponent((params?.sign as string) || '').trim();
 
-  // TARİH DÜZELTMESİ: Eğer URL'de date yoksa, kullanıcının o anki gerçek tarihini al (TimeZone uyumlu)
   const getTodayFormatted = () => {
     const now = new Date();
     const offset = now.getTimezoneOffset();
@@ -70,13 +71,12 @@ export default function ZodiacArticle() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Sorguda rawDate'i kullanarak o güne ait veriyi çek
         let mainQuery = supabase.from('gemicha_insights')
           .select('*')
           .ilike('language', rawLang)
           .ilike('topic', dbTopic)
           .ilike('zodiac_sign', dbSign)
-          .eq('target_date', rawDate) // Direkt tarih eşleşmesi yap
+          .eq('target_date', rawDate)
           .limit(1);
 
         const { data, error } = await mainQuery;
@@ -89,7 +89,7 @@ export default function ZodiacArticle() {
              setFaqData(typeof data[0].faq_schema === 'string' ? JSON.parse(data[0].faq_schema) : data[0].faq_schema); 
            } catch(e) { setFaqData([]); }
         } else {
-           setInsight(null); // Veri yoksa null set et
+           setInsight(null);
         }
       } catch (err) {
         console.error("Fetch error:", err);
@@ -186,7 +186,6 @@ export default function ZodiacArticle() {
               <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-transparent to-transparent"></div>
            </div>
            <div className="mb-6">
-              {/* DATE INPUT DÜZELTİLDİ: rawDate artık her zaman o anki günü temsil ediyor */}
               <input type="date" value={rawDate} onChange={(e) => handleDateChange(e.target.value)} onClick={(e) => (e.target as HTMLInputElement).showPicker?.()} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:border-cyan-400 transition-all cursor-pointer" />
            </div>
            <div className="space-y-2 mb-8 w-full">
@@ -268,5 +267,14 @@ export default function ZodiacArticle() {
           </div>
       </footer>
     </div>
+  );
+}
+
+// 2. YENİ EKLENEN KISIM: Next.js'in Build Sırasında İstediği Kalkan (<Suspense>)
+export default function ZodiacArticle() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black flex justify-center items-center"><div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div></div>}>
+      <ZodiacArticleContent />
+    </Suspense>
   );
 }
