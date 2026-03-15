@@ -174,12 +174,12 @@ function ZodiacArticleContent() {
       <div className="flex flex-1 flex-col md:flex-row">
         <aside className="w-full md:w-[450px] bg-[#020202] border-e border-white/5 p-8 md:p-12 flex flex-col shrink-0 overflow-hidden">
            <div className="mb-6 w-full">
-              {/* MOBİL GERİ BUTONU VE NEURAL ETİKETİ BİR ARADA */}
+              {/* MOBİL GERİ BUTONU (ARTIK DİREKT /COSMOS SAYFASINA GİDİYOR) VE NEURAL ETİKETİ BİR ARADA */}
               <div className="flex items-center gap-2 mb-6">
-                <button onClick={() => router.back()} className={`md:hidden flex items-center gap-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 transition-colors border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-3 py-2 rounded-full ${trackingWide}`}>
+                <Link href="/cosmos" className={`md:hidden flex items-center gap-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 transition-colors border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-3 py-2 rounded-full ${trackingWide}`}>
                   <i className="fa-solid fa-arrow-left rtl:rotate-180"></i>
                   {safeUpper(getUIString(UI_DICT, rawLang, 'back', 'BACK'), rawLang)}
-                </button>
+                </Link>
                 <span className={`bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 text-[9px] font-black px-4 py-2 rounded-full inline-block ${trackingWide}`}>
                   {safeUpper(`NEURAL ${displayTopic}`, rawLang)}
                 </span>
