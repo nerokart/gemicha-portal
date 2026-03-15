@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 
-// Kendi klasör yapına göre import yolunu ayarla (../../../../../ veya ../../)
+// DİKKAT: Bu dosya çok derinde olduğu için 5 adım geriye (../../../../../) gidiyor!
 import { LANG_NAMES, ZODIAC_DICT, TOPICS_DICT, UI_DICT, slugify, getBaseIdFromLocalized, getUIString, safeUpper } from '../../../../../lib/cosmos-constants';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
